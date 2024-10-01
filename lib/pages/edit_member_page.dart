@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Add image picker package
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditMemberPage extends StatefulWidget {
@@ -18,6 +20,8 @@ class _EditMemberPageState extends State<EditMemberPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   bool _isLoading = false;
+  String? _profileImageUrl; // To hold the profile image URL
+  File? _newProfileImage; // To hold the selected image file for update
 
   @override
   void initState() {
@@ -40,6 +44,7 @@ class _EditMemberPageState extends State<EditMemberPage> {
       if (response != null) {
         _nameController.text = response['name'];
         _emailController.text = response['email'];
+        _profileImageUrl = response['profile_image_url']; // Get the image URL
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -65,12 +70,21 @@ class _EditMemberPageState extends State<EditMemberPage> {
     });
 
     try {
-      // Perform the update and select the updated data
+      String? imageUrl;
+
+      // If a new profile image was selected, upload it first
+      if (_newProfileImage != null) {
+        imageUrl = await _uploadImage(_newProfileImage!);
+      }
+
+      // Perform the update
       final response = await _supabaseClient
           .from('members')
           .update({
             'name': _nameController.text,
             'email': _emailController.text,
+            if (imageUrl != null)
+              'profile_image_url': imageUrl, // Update image URL if changed
           })
           .eq('id', widget.id)
           .select(); // This will retrieve the updated row data
@@ -97,6 +111,39 @@ class _EditMemberPageState extends State<EditMemberPage> {
     }
   }
 
+  Future<String?> _uploadImage(File image) async {
+    try {
+      // Upload the image and get the file path as a response
+      final filePath = 'public/${widget.id}/profile_image.png';
+      final response = await _supabaseClient.storage
+          .from('profile_images') // Assuming 'avatars' is the bucket name
+          .upload(filePath, image);
+
+      // If upload is successful, generate the public URL for the image
+      if (response != null) {
+        final publicUrl = _supabaseClient.storage
+            .from('profile_images')
+            .getPublicUrl(filePath);
+        return publicUrl;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error uploading image: $e'),
+      ));
+    }
+    return null;
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _newProfileImage = File(pickedFile.path); // Update the selected image
+      });
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -118,6 +165,30 @@ class _EditMemberPageState extends State<EditMemberPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Center(
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundImage: _newProfileImage != null
+                                ? FileImage(_newProfileImage!)
+                                : _profileImageUrl != null
+                                    ? NetworkImage(_profileImageUrl!)
+                                    : AssetImage('assets/default_avatar.png')
+                                        as ImageProvider,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: Icon(Icons.edit),
+                              onPressed: _pickImage,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
                     TextField(
                       controller: _nameController,
                       decoration: InputDecoration(

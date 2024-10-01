@@ -12,7 +12,9 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   final _supabaseClient = Supabase.instance.client;
   List<dynamic> _members = [];
+  List<dynamic> _filteredMembers = [];
   bool _isLoading = false;
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -26,13 +28,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
 
     try {
-      final response = await _supabaseClient.from('members').select();
+      final response = await _supabaseClient.from('members').select(
+          '*, loan_applications(status)'); // Fetching status from loan_applications
 
       print("Fetched members: $response"); // Debug print
 
       if (response != null) {
         setState(() {
           _members = response;
+          _filteredMembers = response; // Initialize filtered list
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -47,6 +51,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     setState(() {
       _isLoading = false;
+    });
+  }
+
+  void _filterMembers(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredMembers = _members.where((member) {
+        final nameMatch =
+            member['name']?.toLowerCase().contains(query.toLowerCase()) ??
+                false;
+        final statusMatch = member['loan_applications'] != null &&
+                member['loan_applications'][0]['status']
+                    ?.toLowerCase()
+                    .contains(query.toLowerCase()) ??
+            false;
+        // Add other conditions based on member fields if needed
+
+        return nameMatch ||
+            statusMatch; // Adjust this based on desired search logic
+      }).toList();
     });
   }
 
@@ -117,116 +141,170 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Admin Dashboard'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.add),
-              onPressed: _addMember,
+      appBar: AppBar(
+        title: Text('Admin Dashboard'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: _addMember,
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => BankDashboard()),
+          );
+        },
+        child: Icon(Icons.money),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              onChanged: _filterMembers,
+              decoration: InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BankDashboard()),
-            );
-          },
-          child: Icon(Icons.money),
-        ),
-        body: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : _members.isEmpty
-                ? Center(child: Text('No members found.'))
-                : ListView.builder(
-                    itemCount: _members.length,
-                    itemBuilder: (context, index) {
-                      final member = _members[index];
+          ),
+          Expanded(
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : _filteredMembers.isEmpty
+                    ? Center(child: Text('No members found.'))
+                    : ListView.builder(
+                        itemCount: _filteredMembers.length,
+                        itemBuilder: (context, index) {
+                          final member = _filteredMembers[index];
+                          final status = member['loan_applications'] != null
+                              ? member['loan_applications'][0]['status']
+                              : 'No Status'; // Fetching status from loan_applications
 
-                      return GestureDetector(
-                        onTap: () =>
-                            _updateMember(member), // Navigate to EditMemberPage
-                        child: Card(
-                          margin:
-                              EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Display member name
-                                Text(
-                                  member['name'] ?? 'No Name',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-
-                                // Display member email
-                                Text(
-                                  'Email: ${member['email'] ?? 'No Email'}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 4),
-
-                                // Display member phone
-                                Text(
-                                  'Phone: ${member['phone'] ?? 'No Phone'}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 4),
-
-                                // Display member NIK
-                                Text(
-                                  'NIK: ${member['nik'] ?? 'No NIK'}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 4),
-
-                                // Display member Date of Birth
-                                Text(
-                                  'DOB: ${member['dob'] ?? 'No DOB'}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 4),
-
-                                // Display member Address
-                                Text(
-                                  'Address: ${member['address'] ?? 'No Address'}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 16),
-
-                                // Optionally add more details like profile image or other fields here
-
-                                // Edit and Delete buttons
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
+                          return GestureDetector(
+                            onTap: () => _updateMember(member),
+                            child: Card(
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Stack(
                                   children: [
-                                    IconButton(
-                                      icon: Icon(Icons.edit),
-                                      onPressed: () =>
-                                          _updateMember(member), // Edit action
+                                    // Member details
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          member['name'] ?? 'No Name',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'Email: ${member['email'] ?? 'No Email'}',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Phone: ${member['phone'] ?? 'No Phone'}',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'NIK: ${member['nik'] ?? 'No NIK'}',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'DOB: ${member['dob'] ?? 'No DOB'}',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Address: ${member['address'] ?? 'No Address'}',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        SizedBox(height: 16),
+
+                                        // Display Loan Application Status
+                                        Text(
+                                          'Loan Status: $status',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: status == 'approved'
+                                                ? Colors.green
+                                                : status == 'rejected'
+                                                    ? Colors.red
+                                                    : Colors.orange,
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+
+                                        // Edit and Delete buttons
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.edit),
+                                              onPressed: () =>
+                                                  _updateMember(member),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.delete),
+                                              onPressed: () =>
+                                                  _deleteMember(member),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      icon: Icon(Icons.delete),
-                                      onPressed: () => _deleteMember(
-                                          member), // Delete action
+
+                                    // Profile image in the top right corner
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: member['profile_image_url'] != null
+                                          ? ClipOval(
+                                              child: Image.network(
+                                                member['profile_image_url'],
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error,
+                                                    stackTrace) {
+                                                  return Icon(
+                                                    Icons.person,
+                                                    size: 60,
+                                                  );
+                                                },
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.person,
+                                              size: 60,
+                                            ),
                                     ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    },
-                  ));
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
   }
 }

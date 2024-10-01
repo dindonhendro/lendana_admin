@@ -27,12 +27,8 @@ class _BankDashboardState extends State<BankDashboard> {
     try {
       final response = await _supabaseClient
           .from('loan_applications')
-          .select(
-              '*, members(profile_image_url, name)') // Fetch related member data
+          .select('*, members(*)') // Fetch related member data
           .order('created_at', ascending: false);
-
-      // Debugging log to see the fetched data
-      print('Fetched loan applications: $response');
 
       if (response != null && response.isNotEmpty) {
         setState(() {
@@ -76,11 +72,8 @@ class _BankDashboardState extends State<BankDashboard> {
           .from('loan_applications')
           .update({'status': status}).eq('id', loan['id']);
 
-      // Debugging log to see the response
-      print('Update response: $response');
-
       if (response != null) {
-        await _fetchLoanApplications(); // Wait for the refresh to complete
+        _fetchLoanApplications(); // Refresh loan list
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Loan application $status!'),
         ));
@@ -97,30 +90,6 @@ class _BankDashboardState extends State<BankDashboard> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Bank Dashboard - Loan Reviews'),
-        actions: [
-          // Display profile image from members table
-          FutureBuilder<dynamic>(
-            future:
-                _fetchProfileImage(), // Call a function to fetch the image URL
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator(); // Show loading indicator
-              } else if (snapshot.hasError) {
-                return Container(); // Handle error
-              } else if (snapshot.hasData) {
-                String imageUrl = snapshot.data['profile_image_url'];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(imageUrl),
-                  ),
-                );
-              }
-              return Container(); // Default case
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -204,23 +173,6 @@ class _BankDashboardState extends State<BankDashboard> {
         ],
       ),
     );
-  }
-
-  // Function to fetch the profile image of the logged-in user
-  Future<dynamic> _fetchProfileImage() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-
-    if (userId != null) {
-      final response = await _supabaseClient
-          .from('members')
-          .select('profile_image_url')
-          .eq('id', userId)
-          .single();
-
-      return response;
-    }
-
-    return null;
   }
 }
 
