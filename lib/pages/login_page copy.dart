@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lendana/pages/landing_page.dart';
-import 'package:lendana/pages/register_page.dart'; // Import RegisterPage
+import 'package:lendana_admin/pages/landing_page.dart';
+import 'package:lendana_admin/pages/register_page.dart'; // Import RegisterPage
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {

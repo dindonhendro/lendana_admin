@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lendana/pages/landing_page.dart';
-import 'package:lendana/pages/register_page.dart';
+import 'package:lendana_admin/pages/bank_dashboard.dart';
+import 'package:lendana_admin/pages/landing_page.dart';
+import 'package:lendana_admin/pages/register_page.dart';
+import 'package:lendana_admin/pages/admin_dashboard.dart'; // Import Admin Dashboard
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -22,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // Attempt to log in the user
       final response = await _supabaseClient.auth.signInWithPassword(
         email: _emailController.text,
         password: _passwordController.text,
@@ -32,9 +35,37 @@ class _LoginPageState extends State<LoginPage> {
           content: Text('Login successful!'),
         ));
 
-        // Show dialog to confirm camera permission request
-        _showCameraPermissionDialog();
+        // Fetch user data from 'users' table to check for admin or bank role
+        final userId = response.user?.id;
+        if (userId != null) {
+          final userResponse = await _supabaseClient
+              .from('users')
+              .select('is_admin, is_bank') // Select both is_admin and is_bank
+              .eq('user_id', userId)
+              .single();
+
+          final isAdmin = userResponse['is_admin'] ?? false;
+          final isBank = userResponse['is_bank'] ?? false;
+
+          if (isAdmin) {
+            // Navigate to Admin Dashboard if user is an admin
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminDashboard()),
+            );
+          } else if (isBank) {
+            // Navigate to Bank Dashboard if user is a bank user
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => BankDashboard()),
+            );
+          } else {
+            // Show camera permission dialog for regular users
+            _showCameraPermissionDialog();
+          }
+        }
       } else {
+        // Show login failure message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Login failed.'),
@@ -42,12 +73,14 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } on AuthException catch (e) {
+      // Show specific Supabase Auth error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error: ${e.message}'),
         ));
       }
     } catch (e) {
+      // Show unexpected error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Unexpected error occurred: $e'),

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lendana/pages/job/job_add.dart';
-import 'package:lendana/pages/job/joblist.dart';
-import 'package:lendana/pages/landing_page.dart';
-import 'package:lendana/pages/login_page.dart';
-import 'package:lendana/pages/register_page.dart';
-import 'package:lendana/themes/light_mode.dart';
+import 'package:lendana_admin/pages/landing_page.dart';
+import 'package:lendana_admin/pages/login_page.dart';
+import 'package:lendana_admin/pages/register_page.dart';
+import 'package:lendana_admin/themes/light_mode.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'splash_screen.dart'; // Import your splash screen
 
@@ -27,8 +25,7 @@ class MyApp extends StatelessWidget {
         '/landingpage': (context) => LandingPage(),
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
-        '/joblist': (context) => JobList(),
-        '/jobadd': (context) => JobAdd(),
+
         // Add more routes as needed
       },
       title: 'Flutter Registration and Login App',

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:lendana/components/my_button.dart';
-import 'package:lendana/pages/card_page.dart';
-import 'package:lendana/pages/jobpref_page.dart';
+import 'package:lendana_admin/components/my_button.dart';
+import 'package:lendana_admin/pages/card_page.dart';
+import 'package:lendana_admin/pages/jobpref_page.dart';
 
-import 'package:lendana/pages/profile_page.dart';
+import 'package:lendana_admin/pages/profile_page.dart';
 
 class LengkapiPage extends StatefulWidget {
   @override

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:lendana/pages/template_page.dart';
+import 'package:lendana_admin/pages/template_page.dart';
 
 class ProfileTemplatePage extends StatefulWidget {
   @override

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lendana/pages/loan_page.dart';
-import 'package:lendana/pages/card_page.dart';
-import 'package:lendana/pages/job/joblist.dart';
-import 'package:lendana/pages/lengkapi_page.dart';
-import 'package:lendana/pages/profile_template_page.dart';
-import 'package:lendana/pages/profile_display_page.dart';
-import 'package:lendana/pages/profile_page.dart';
+import 'package:lendana_admin/pages/loan_page.dart';
+import 'package:lendana_admin/pages/card_page.dart';
 
-import 'package:lendana/pages/save_profile_to_file_page.dart';
-import 'package:lendana/pages/storage_page.dart';
+import 'package:lendana_admin/pages/lengkapi_page.dart';
+import 'package:lendana_admin/pages/profile_template_page.dart';
+import 'package:lendana_admin/pages/profile_display_page.dart';
+import 'package:lendana_admin/pages/profile_page.dart';
+
+import 'package:lendana_admin/pages/save_profile_to_file_page.dart';
+import 'package:lendana_admin/pages/storage_page.dart';
 
 class LandingPage extends StatefulWidget {
   @override
@@ -20,7 +20,7 @@ class _LandingPageState extends State<LandingPage> {
 
   final List<Widget> _pages = [
     // Home Page
-    JobList(),
+//(),
 
     // Name & Phone Page
     LengkapiPage(),
@@ -42,7 +42,7 @@ class _LandingPageState extends State<LandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lendana'),
+        title: Text('lendana_admin'),
         elevation: 0.0,
         automaticallyImplyLeading: false,
       ),
