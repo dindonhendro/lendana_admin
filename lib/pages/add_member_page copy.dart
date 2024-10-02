@@ -1,6 +1,7 @@
 import 'dart:io'; // For handling files
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lendana_admin/pages/landing_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddMemberPage extends StatefulWidget {
@@ -22,7 +23,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
   XFile? _profileImage;
   XFile? _passportImage;
   bool _isLoading = false;
-  int _currentStep = 0;
 
   Future<void> _pickProfileImage() async {
     final ImagePicker _picker = ImagePicker();
@@ -55,6 +55,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
     });
 
     try {
+      // Save the data as a draft in Supabase 'drafts' table
       final response = await _supabaseClient.from('drafts').insert({
         'name': _nameController.text,
         'email': _emailController.text,
@@ -149,10 +150,12 @@ class _AddMemberPageState extends State<AddMemberPage> {
 
       if (loanResponse.isNotEmpty) {
         widget.onMemberAdded(); // Refresh the member list
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Loan application submitted successfully!'),
-        ));
-        Navigator.pop(context);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  LandingPage()), // Replace with the desired page
+        );
       } else {
         throw Exception('Error creating loan application.');
       }
@@ -167,102 +170,72 @@ class _AddMemberPageState extends State<AddMemberPage> {
     }
   }
 
-  List<Step> _getSteps() {
-    return [
-      Step(
-        title: Text('Member Info'),
-        content: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
-            ),
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Phone'),
-            ),
-            TextField(
-              controller: _nikController,
-              decoration: InputDecoration(labelText: 'NIK'),
-            ),
-            TextField(
-              controller: _dobController,
-              decoration: InputDecoration(labelText: 'Date of Birth'),
-            ),
-            TextField(
-              controller: _addressController,
-              decoration: InputDecoration(labelText: 'Address'),
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-          ],
-        ),
-        isActive: _currentStep == 0,
-      ),
-      Step(
-        title: Text('Upload Images'),
-        content: Column(
-          children: [
-            _profileImage == null
-                ? Text('No profile image selected.')
-                : Image.file(File(_profileImage!.path)),
-            ElevatedButton(
-              onPressed: _pickProfileImage,
-              child: Text('Select Profile Image'),
-            ),
-            SizedBox(height: 10),
-            _passportImage == null
-                ? Text('No passport image selected.')
-                : Image.file(File(_passportImage!.path)),
-            ElevatedButton(
-              onPressed: _pickPassportImage,
-              child: Text('Select Passport Image'),
-            ),
-          ],
-        ),
-        isActive: _currentStep == 1,
-      ),
-      Step(
-        title: Text('Review & Submit'),
-        content: Column(
-          children: [
-            Text('Review all the information before submission.'),
-            ElevatedButton(
-              onPressed: _submitForm, // Submit to the bank
-              child: Text('Submit To The Bank'),
-            ),
-          ],
-        ),
-        isActive: _currentStep == 2,
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Add Member')),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Stepper(
-              currentStep: _currentStep,
-              onStepContinue: () {
-                if (_currentStep < 2) {
-                  setState(() {
-                    _currentStep += 1;
-                  });
-                }
-              },
-              onStepCancel: () {
-                if (_currentStep > 0) {
-                  setState(() {
-                    _currentStep -= 1;
-                  });
-                }
-              },
-              steps: _getSteps(),
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(labelText: 'Name'),
+                    ),
+                    TextField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(labelText: 'Phone'),
+                    ),
+                    TextField(
+                      controller: _nikController,
+                      decoration: InputDecoration(labelText: 'NIK'),
+                    ),
+                    TextField(
+                      controller: _dobController,
+                      decoration: InputDecoration(labelText: 'Date of Birth'),
+                    ),
+                    TextField(
+                      controller: _addressController,
+                      decoration: InputDecoration(labelText: 'Address'),
+                    ),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(labelText: 'Email'),
+                    ),
+                    SizedBox(height: 10),
+                    _profileImage == null
+                        ? Text('No profile image selected.')
+                        : Image.file(
+                            File(_profileImage!.path)), // Display profile image
+                    ElevatedButton(
+                      onPressed: _pickProfileImage,
+                      child: Text('Select Profile Image'),
+                    ),
+                    SizedBox(height: 10),
+                    _passportImage == null
+                        ? Text('No passport image selected.')
+                        : Image.file(File(
+                            _passportImage!.path)), // Display passport image
+                    ElevatedButton(
+                      onPressed: _pickPassportImage,
+                      child: Text('Select Passport Image'),
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _saveDraft, // Save Draft button
+                      child: Text('Save Draft'),
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _submitForm, // Submit to the bank
+                      child: Text('Submit To The Bank'),
+                    ),
+                  ],
+                ),
+              ),
             ),
     );
   }

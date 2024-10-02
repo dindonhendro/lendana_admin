@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
             // Navigate to Admin Dashboard if user is an admin
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => AdminDashboard()),
+              MaterialPageRoute(builder: (context) => LandingPage()),
             );
           } else if (isBank) {
             // Navigate to Bank Dashboard if user is a bank user
@@ -111,39 +111,13 @@ class _LoginPageState extends State<LoginPage> {
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
-                await _requestCameraPermission();
-              },
+              onPressed: () async {},
               child: Text('OK'),
             ),
           ],
         );
       },
     );
-  }
-
-  Future<void> _requestCameraPermission() async {
-    PermissionStatus status = await Permission.camera.request();
-
-    setState(() {
-      _cameraPermissionGranted = status.isGranted;
-    });
-
-    if (_cameraPermissionGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Camera permission granted.'),
-      ));
-      // Navigate to Landing Page after permission is granted
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LandingPage()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Camera permission denied.'),
-      ));
-    }
   }
 
   // Forgot Password

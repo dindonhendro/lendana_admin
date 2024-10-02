@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lendana_admin/pages/add_member_page.dart';
 import 'package:lendana_admin/pages/bank_dashboard.dart';
 import 'package:lendana_admin/pages/edit_member_page.dart';
+import 'package:lendana_admin/pages/loan_status_report_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -154,7 +155,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => BankDashboard()),
+            MaterialPageRoute(builder: (context) => LoanStatusReportPage()),
           );
         },
         child: Icon(Icons.money),

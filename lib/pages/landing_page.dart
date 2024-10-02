@@ -1,74 +1,128 @@
 import 'package:flutter/material.dart';
-import 'package:lendana_admin/pages/loan_page.dart';
-import 'package:lendana_admin/pages/card_page.dart';
+import 'package:lendana_admin/pages/admin_dashboard.dart';
+import 'package:lendana_admin/pages/add_member_page.dart';
+import 'package:lendana_admin/pages/loan_status_report_page.dart';
 
-import 'package:lendana_admin/pages/lengkapi_page.dart';
-import 'package:lendana_admin/pages/profile_template_page.dart';
-import 'package:lendana_admin/pages/profile_display_page.dart';
-import 'package:lendana_admin/pages/profile_page.dart';
-
-import 'package:lendana_admin/pages/save_profile_to_file_page.dart';
-import 'package:lendana_admin/pages/storage_page.dart';
-
-class LandingPage extends StatefulWidget {
-  @override
-  _LandingPageState createState() => _LandingPageState();
-}
-
-class _LandingPageState extends State<LandingPage> {
-  int _currentIndex = 0;
-
-  final List<Widget> _pages = [
-    // Home Page
-//(),
-
-    // Name & Phone Page
-    LengkapiPage(),
-
-    // Profile Page
-    LoanPage(),
-
-    // Storage Page
-    SaveProfileToFilePage(),
-  ];
-
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
+class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('lendana_admin'),
-        elevation: 0.0,
-        automaticallyImplyLeading: false,
+        title: Text('Welcome User'),
+        backgroundColor: Colors.teal,
       ),
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Data',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Loan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance),
-            label: 'Profile',
-          ),
-        ],
-        type: BottomNavigationBarType.fixed, // Keeps labels visible
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome User',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildGridButton(
+                    context,
+                    title: 'Dashboard',
+                    color: Colors.teal[300]!,
+                    icon: Icons.dashboard,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminDashboard(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildGridButton(
+                    context,
+                    title: 'Add Member',
+                    color: Colors.orange[300]!,
+                    icon: Icons.person_add,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddMemberPage(
+                            onMemberAdded: () {
+                              // Handle member added callback here
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildGridButton(
+                    context,
+                    title: 'Reporting',
+                    color: Colors.blue[300]!,
+                    icon: Icons.bar_chart,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoanStatusReportPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridButton(
+    BuildContext context, {
+    required String title,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: Offset(0, 3), // changes position of shadow
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: Colors.white),
+            SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
