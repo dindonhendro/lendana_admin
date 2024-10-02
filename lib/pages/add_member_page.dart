@@ -19,6 +19,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
   final _nikController = TextEditingController();
   final _dobController = TextEditingController();
   final _addressController = TextEditingController();
+  final _loan_amountController = TextEditingController();
   XFile? _profileImage;
   XFile? _passportImage;
   bool _isLoading = false;
@@ -62,6 +63,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'nik': _nikController.text,
         'dob': _dobController.text,
         'address': _addressController.text,
+        'loan_amount': _loan_amountController.text,
         'profile_image_url': _profileImage != null ? _profileImage!.path : null,
         'passport_image_url':
             _passportImage != null ? _passportImage!.path : null,
@@ -87,10 +89,10 @@ class _AddMemberPageState extends State<AddMemberPage> {
   Future<void> _submitForm() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
-        _profileImage == null ||
-        _passportImage == null) {
+        _profileImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Please complete all fields and upload both images.'),
+        content: Text(
+            'Please complete all required fields and upload the profile image.'),
       ));
       return;
     }
@@ -110,15 +112,19 @@ class _AddMemberPageState extends State<AddMemberPage> {
           .from('profile_images')
           .getPublicUrl(profileUploadPath);
 
-      // Step 2: Upload the passport image to Supabase storage
-      final passportFile = File(_passportImage!.path);
-      final passportUploadPath = 'public/${_passportImage!.name}';
-      await _supabaseClient.storage
-          .from('passport_images')
-          .upload(passportUploadPath, passportFile);
-      final passportImageUrl = _supabaseClient.storage
-          .from('passport_images')
-          .getPublicUrl(passportUploadPath);
+      String? passportImageUrl;
+
+      // Step 2: Upload the passport image to Supabase storage (only if it's selected)
+      if (_passportImage != null) {
+        final passportFile = File(_passportImage!.path);
+        final passportUploadPath = 'public/${_passportImage!.name}';
+        await _supabaseClient.storage
+            .from('passport_images')
+            .upload(passportUploadPath, passportFile);
+        passportImageUrl = _supabaseClient.storage
+            .from('passport_images')
+            .getPublicUrl(passportUploadPath);
+      }
 
       // Step 3: Insert the member data into the 'members' table
       final memberResponse = await _supabaseClient.from('members').insert({
@@ -128,8 +134,9 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'nik': _nikController.text,
         'dob': _dobController.text,
         'address': _addressController.text,
+        'loan_amount': _loan_amountController.text,
         'profile_image_url': profileImageUrl,
-        'passport_image_url': passportImageUrl,
+        'passport_image_url': passportImageUrl, // This can be null
         'is_approved': false,
       }).select();
 
@@ -186,6 +193,10 @@ class _AddMemberPageState extends State<AddMemberPage> {
               decoration: InputDecoration(labelText: 'NIK'),
             ),
             TextField(
+              controller: _emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
               controller: _dobController,
               decoration: InputDecoration(labelText: 'Date of Birth'),
             ),
@@ -194,8 +205,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
               decoration: InputDecoration(labelText: 'Address'),
             ),
             TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              controller: _loan_amountController,
+              decoration: InputDecoration(labelText: 'Loan Amount'),
             ),
           ],
         ),
@@ -218,7 +229,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                 : Image.file(File(_passportImage!.path)),
             ElevatedButton(
               onPressed: _pickPassportImage,
-              child: Text('Select Passport Image'),
+              child: Text('Select Passport Image (Optional)'),
             ),
           ],
         ),

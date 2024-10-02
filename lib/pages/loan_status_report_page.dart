@@ -59,6 +59,10 @@ class _LoanStatusReportPageState extends State<LoanStatusReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Ensure totalLoans is calculated as an int
+    int totalLoans =
+        _loanData.fold<int>(0, (sum, loan) => sum + (loan['count'] as int));
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Loan Status Report'),
@@ -72,6 +76,36 @@ class _LoanStatusReportPageState extends State<LoanStatusReportPage> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Total Loans Display
+                        Container(
+                          padding: EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total Loans:',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                ),
+                              ),
+                              Text(
+                                totalLoans.toString(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 20),
                         Text(
                           'Loan Status Summary',
                           style: TextStyle(

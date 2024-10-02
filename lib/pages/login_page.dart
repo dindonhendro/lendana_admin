@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lendana_admin/pages/bank_dashboard.dart';
 import 'package:lendana_admin/pages/landing_page.dart';
+import 'package:lendana_admin/pages/landing_page_bank%20.dart';
 import 'package:lendana_admin/pages/register_page.dart';
 import 'package:lendana_admin/pages/admin_dashboard.dart'; // Import Admin Dashboard
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -57,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
             // Navigate to Bank Dashboard if user is a bank user
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => BankDashboard()),
+              MaterialPageRoute(builder: (context) => LandingPageBank()),
             );
           } else {
             // Show camera permission dialog for regular users
