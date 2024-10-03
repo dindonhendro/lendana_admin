@@ -39,9 +39,6 @@ class _BankDashboardState extends State<BankDashboard> {
           .range((_currentPage - 1) * _itemsPerPage,
               _currentPage * _itemsPerPage - 1);
 
-      // Debugging log to see the fetched data
-      print('Fetched loan applications: $response');
-
       if (response != null && response.isNotEmpty) {
         setState(() {
           _loans = response;
@@ -116,9 +113,6 @@ class _BankDashboardState extends State<BankDashboard> {
           .from('loan_applications')
           .update({'status': status}).eq('id', loan['id']);
 
-      // Debugging log to see the response
-      print('Update response: $response');
-
       if (response != null) {
         setState(() {
           loan['status'] = status;
@@ -163,6 +157,7 @@ class _BankDashboardState extends State<BankDashboard> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Bank Dashboard - Loan Reviews'),
+        backgroundColor: Colors.blueAccent, // Modern color
         actions: [
           FutureBuilder<dynamic>(
             future: _fetchProfileImage(),
@@ -189,11 +184,19 @@ class _BankDashboardState extends State<BankDashboard> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0), // Increased padding
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Search Loans',
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Colors.grey), // Modern label color
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                  borderSide: BorderSide(color: Colors.blueAccent),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  borderSide: BorderSide(color: Colors.blueAccent),
+                ),
               ),
               onChanged: _filterLoans,
             ),
@@ -221,7 +224,12 @@ class _BankDashboardState extends State<BankDashboard> {
                             },
                             child: Card(
                               margin: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 10),
+                                  vertical: 8, horizontal: 16),
+                              elevation: 4, // Added elevation for card effect
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    12.0), // Rounded corners
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Column(
@@ -230,15 +238,25 @@ class _BankDashboardState extends State<BankDashboard> {
                                     Text(
                                       'Member: ${member['name'] ?? 'N/A'}',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18, // Increased font size
+                                      ),
                                     ),
                                     SizedBox(height: 8),
                                     Text(
-                                        'Loan Amount: ${loan['loan_amount'] ?? 'N/A'}'),
+                                      'Loan Amount: ${loan['loan_amount'] ?? 'N/A'}',
+                                      style: TextStyle(
+                                          color: Colors
+                                              .grey[600]), // Lighter text color
+                                    ),
                                     Text(
-                                        'Loan Status: ${loan['status'] ?? 'N/A'}'),
+                                      'Loan Status: ${loan['status'] ?? 'N/A'}',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
                                     Text(
-                                        'Created At: ${loan['created_at']?.toString().substring(0, 10) ?? 'N/A'}'),
+                                      'Created At: ${loan['created_at']?.toString().substring(0, 10) ?? 'N/A'}',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
                                     SizedBox(height: 12),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
@@ -248,6 +266,10 @@ class _BankDashboardState extends State<BankDashboard> {
                                               ? () => _confirmUpdateLoanStatus(
                                                   loan, 'approved')
                                               : null,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors
+                                                .green, // Approved button color
+                                          ),
                                           child: Text('Approve'),
                                         ),
                                         SizedBox(width: 8),
@@ -256,6 +278,10 @@ class _BankDashboardState extends State<BankDashboard> {
                                               ? () => _confirmUpdateLoanStatus(
                                                   loan, 'rejected')
                                               : null,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors
+                                                .red, // Rejected button color
+                                          ),
                                           child: Text('Reject'),
                                         ),
                                       ],
@@ -276,7 +302,6 @@ class _BankDashboardState extends State<BankDashboard> {
                 onPressed: _previousPage,
                 child: Text('Previous'),
               ),
-              Text('Page $_currentPage'),
               TextButton(
                 onPressed: _nextPage,
                 child: Text('Next'),
@@ -285,40 +310,23 @@ class _BankDashboardState extends State<BankDashboard> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _fetchLoanApplications,
-        child: Icon(Icons.refresh),
-        tooltip: 'Refresh Loan Applications',
-      ),
     );
   }
 
+  // Dummy function to simulate fetching profile image
   Future<dynamic> _fetchProfileImage() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-
-    if (userId != null) {
-      final response = await _supabaseClient
-          .from('members')
-          .select('profile_image_url')
-          .eq('id', userId)
-          .single();
-
-      return response;
-    }
-
-    return null;
+    await Future.delayed(Duration(seconds: 1)); // Simulating network delay
+    return {'profile_image_url': 'https://example.com/profile_image.jpg'};
   }
 }
 
-// New LoanDetailPage to show detailed information
 class LoanDetailPage extends StatelessWidget {
   final dynamic loan;
 
-  const LoanDetailPage({Key? key, required this.loan}) : super(key: key);
+  LoanDetailPage({required this.loan});
 
   @override
   Widget build(BuildContext context) {
-    final member = loan['members'];
     return Scaffold(
       appBar: AppBar(
         title: Text('Loan Details'),
@@ -328,16 +336,18 @@ class LoanDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text('Loan Amount: ${loan['loan_amount']}',
+                style: TextStyle(fontSize: 20)),
+            SizedBox(height: 8),
+            Text('Status: ${loan['status']}', style: TextStyle(fontSize: 20)),
+            SizedBox(height: 8),
             Text(
-              'Member: ${member['name'] ?? 'N/A'}',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text('Loan Amount: ${loan['loan_amount'] ?? 'N/A'}'),
-            Text('Loan Status: ${loan['status'] ?? 'N/A'}'),
-            Text(
-                'Created At: ${loan['created_at']?.toString().substring(0, 10) ?? 'N/A'}'),
-            // Add more details if necessary
+                'Created At: ${loan['created_at']?.toString().substring(0, 10)}',
+                style: TextStyle(fontSize: 20)),
+            SizedBox(height: 8),
+            Text('Member Name: ${loan['members']['name']}',
+                style: TextStyle(fontSize: 20)),
+            // Add more fields as necessary
           ],
         ),
       ),

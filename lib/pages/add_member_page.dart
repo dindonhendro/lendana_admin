@@ -1,10 +1,13 @@
 import 'dart:io'; // For handling files
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart'; // For currency formatting
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddMemberPage extends StatefulWidget {
   final Function onMemberAdded;
+
   AddMemberPage({required this.onMemberAdded});
 
   @override
@@ -15,46 +18,52 @@ class _AddMemberPageState extends State<AddMemberPage> {
   final _supabaseClient = Supabase.instance.client;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _nikController = TextEditingController();
-  final _dobController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _loan_amountController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nikController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _loanAmountController = TextEditingController();
   XFile? _profileImage;
   XFile? _passportImage;
   bool _isLoading = false;
   int _currentStep = 0;
 
-  Future<void> _pickProfileImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? selectedImage =
-        await _picker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      _profileImage = selectedImage;
-    });
+  String _formatCurrency(String amount) {
+    final formatter =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    String numericString = amount.replaceAll(RegExp(r'[^\d]'), '');
+    if (numericString.isEmpty) return '';
+    final numericAmount = int.tryParse(numericString);
+    return numericAmount != null ? formatter.format(numericAmount) : amount;
   }
 
-  Future<void> _pickPassportImage() async {
+  void _onLoanAmountChanged(String value) {
+    final formattedAmount = _formatCurrency(value);
+    _loanAmountController.value = TextEditingValue(
+      text: formattedAmount,
+      selection: TextSelection.collapsed(offset: formattedAmount.length),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source, bool isProfileImage) async {
     final ImagePicker _picker = ImagePicker();
-    final XFile? selectedImage =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? selectedImage = await _picker.pickImage(source: source);
     setState(() {
-      _passportImage = selectedImage;
+      if (isProfileImage) {
+        _profileImage = selectedImage;
+      } else {
+        _passportImage = selectedImage;
+      }
     });
   }
 
   Future<void> _saveDraft() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Please complete all required fields before saving.'),
-      ));
+      _showSnackBar('Please complete all required fields before saving.');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final response = await _supabaseClient.from('drafts').insert({
         'name': _nameController.text,
@@ -63,70 +72,40 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'nik': _nikController.text,
         'dob': _dobController.text,
         'address': _addressController.text,
-        'loan_amount': _loan_amountController.text,
-        'profile_image_url': _profileImage != null ? _profileImage!.path : null,
-        'passport_image_url':
-            _passportImage != null ? _passportImage!.path : null,
-        'is_submitted': false, // Mark this draft as not yet submitted
+        'loan_amount': _loanAmountController.text
+            .replaceAll('Rp ', '')
+            .replaceAll('.', ''),
+        'profile_image_url': _profileImage?.path,
+        'passport_image_url': _passportImage?.path,
+        'is_submitted': false,
       }).select();
 
       if (response.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Draft saved successfully!'),
-        ));
+        _showSnackBar('Draft saved successfully!');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error saving draft: $e'),
-      ));
+      _showSnackBar('Error saving draft: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _submitForm() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
-        _profileImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            'Please complete all required fields and upload the profile image.'),
-      ));
+        _profileImage == null ||
+        _passportImage == null) {
+      _showSnackBar('Please complete all fields and upload both images.');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      // Step 1: Upload the profile image to Supabase storage
-      final profileFile = File(_profileImage!.path);
-      final profileUploadPath = 'public/${_profileImage!.name}';
-      await _supabaseClient.storage
-          .from('profile_images')
-          .upload(profileUploadPath, profileFile);
-      final profileImageUrl = _supabaseClient.storage
-          .from('profile_images')
-          .getPublicUrl(profileUploadPath);
+      final profileImageUrl =
+          await _uploadImage(_profileImage!, 'profile_images');
+      final passportImageUrl =
+          await _uploadImage(_passportImage!, 'passport_images');
 
-      String? passportImageUrl;
-
-      // Step 2: Upload the passport image to Supabase storage (only if it's selected)
-      if (_passportImage != null) {
-        final passportFile = File(_passportImage!.path);
-        final passportUploadPath = 'public/${_passportImage!.name}';
-        await _supabaseClient.storage
-            .from('passport_images')
-            .upload(passportUploadPath, passportFile);
-        passportImageUrl = _supabaseClient.storage
-            .from('passport_images')
-            .getPublicUrl(passportUploadPath);
-      }
-
-      // Step 3: Insert the member data into the 'members' table
       final memberResponse = await _supabaseClient.from('members').insert({
         'name': _nameController.text,
         'email': _emailController.text,
@@ -134,19 +113,17 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'nik': _nikController.text,
         'dob': _dobController.text,
         'address': _addressController.text,
-        'loan_amount': _loan_amountController.text,
+        'loan_amount': _loanAmountController.text
+            .replaceAll('Rp ', '')
+            .replaceAll('.', ''),
         'profile_image_url': profileImageUrl,
-        'passport_image_url': passportImageUrl, // This can be null
+        'passport_image_url': passportImageUrl,
         'is_approved': false,
       }).select();
 
-      if (memberResponse.isEmpty) {
-        throw Exception('Error adding member.');
-      }
+      if (memberResponse.isEmpty) throw Exception('Error adding member.');
 
       final memberId = memberResponse.first['id'];
-
-      // Step 4: Insert into the 'loan_applications' table
       final loanResponse =
           await _supabaseClient.from('loan_applications').insert({
         'member_id': memberId,
@@ -155,23 +132,29 @@ class _AddMemberPageState extends State<AddMemberPage> {
       }).select();
 
       if (loanResponse.isNotEmpty) {
-        widget.onMemberAdded(); // Refresh the member list
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Loan application submitted successfully!'),
-        ));
+        widget.onMemberAdded();
+        _showSnackBar('Loan application submitted successfully!');
         Navigator.pop(context);
       } else {
         throw Exception('Error creating loan application.');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error adding member and loan application: $e'),
-      ));
+      _showSnackBar('Error adding member and loan application: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
+  }
+
+  Future<String> _uploadImage(XFile image, String bucket) async {
+    final file = File(image.path);
+    final uploadPath = 'public/${image.name}';
+    await _supabaseClient.storage.from(bucket).upload(uploadPath, file);
+    return _supabaseClient.storage.from(bucket).getPublicUrl(uploadPath);
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   List<Step> _getSteps() {
@@ -180,34 +163,17 @@ class _AddMemberPageState extends State<AddMemberPage> {
         title: Text('Member Info'),
         content: Column(
           children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
-            ),
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Phone'),
-            ),
-            TextField(
-              controller: _nikController,
-              decoration: InputDecoration(labelText: 'NIK'),
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _dobController,
-              decoration: InputDecoration(labelText: 'Date of Birth'),
-            ),
-            TextField(
-              controller: _addressController,
-              decoration: InputDecoration(labelText: 'Address'),
-            ),
-            TextField(
-              controller: _loan_amountController,
-              decoration: InputDecoration(labelText: 'Loan Amount'),
-            ),
+            _buildTextField('Name', _nameController),
+            _buildTextField('Phone', _phoneController),
+            _buildTextField('NIK', _nikController),
+            _buildTextField('Email', _emailController),
+            _buildTextField('Date of Birth (dd/mm/yyyy)', _dobController,
+                inputType: TextInputType.number,
+                inputFormatter: [DateInputFormatter()]),
+            _buildTextField('Address', _addressController),
+            _buildTextField('Loan Amount', _loanAmountController,
+                inputType: TextInputType.number,
+                onChanged: _onLoanAmountChanged),
           ],
         ),
         isActive: _currentStep == 0,
@@ -216,21 +182,13 @@ class _AddMemberPageState extends State<AddMemberPage> {
         title: Text('Upload Images'),
         content: Column(
           children: [
-            _profileImage == null
-                ? Text('No profile image selected.')
-                : Image.file(File(_profileImage!.path)),
-            ElevatedButton(
-              onPressed: _pickProfileImage,
-              child: Text('Select Profile Image'),
-            ),
+            _buildImagePreview('Profile Image', _profileImage),
+            _buildImagePickerButton('Select Profile Image',
+                () => _pickImage(ImageSource.gallery, true)),
             SizedBox(height: 10),
-            _passportImage == null
-                ? Text('No passport image selected.')
-                : Image.file(File(_passportImage!.path)),
-            ElevatedButton(
-              onPressed: _pickPassportImage,
-              child: Text('Select Passport Image (Optional)'),
-            ),
+            _buildImagePreview('Passport Image', _passportImage),
+            _buildImagePickerButton('Select Passport Image',
+                () => _pickImage(ImageSource.gallery, false)),
           ],
         ),
         isActive: _currentStep == 1,
@@ -240,10 +198,9 @@ class _AddMemberPageState extends State<AddMemberPage> {
         content: Column(
           children: [
             Text('Review all the information before submission.'),
-            ElevatedButton(
-              onPressed: _submitForm, // Submit to the bank
-              child: Text('Submit To The Bank'),
-            ),
+            SizedBox(height: 20),
+            _buildActionButton('Submit', _submitForm),
+            _buildActionButton('Save Draft', _saveDraft),
           ],
         ),
         isActive: _currentStep == 2,
@@ -251,30 +208,120 @@ class _AddMemberPageState extends State<AddMemberPage> {
     ];
   }
 
+  Widget _buildTextField(String label, TextEditingController controller,
+      {TextInputType inputType = TextInputType.text,
+      List<TextInputFormatter>? inputFormatter,
+      Function(String)? onChanged}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blueAccent)),
+          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        ),
+        keyboardType: inputType,
+        inputFormatters: inputFormatter,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildImagePreview(String label, XFile? image) {
+    return Column(
+      children: [
+        Text(label),
+        SizedBox(height: 8),
+        image == null
+            ? _buildImagePlaceholder('No image selected.')
+            : Image.file(File(image.path),
+                height: 100, width: 100, fit: BoxFit.cover),
+      ],
+    );
+  }
+
+  Widget _buildImagePlaceholder(String text) {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey[200],
+      ),
+      child: Center(child: Text(text, style: TextStyle(color: Colors.grey))),
+    );
+  }
+
+  Widget _buildImagePickerButton(
+      String text, Future<void> Function() onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: EdgeInsets.symmetric(vertical: 15),
+      ),
+      child: Text(text),
+    );
+  }
+
+  Widget _buildActionButton(String text, Future<void> Function() onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: EdgeInsets.symmetric(vertical: 15),
+      ),
+      child: Text(text),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Add Member')),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Stepper(
-              currentStep: _currentStep,
-              onStepContinue: () {
-                if (_currentStep < 2) {
-                  setState(() {
-                    _currentStep += 1;
-                  });
-                }
-              },
-              onStepCancel: () {
-                if (_currentStep > 0) {
-                  setState(() {
-                    _currentStep -= 1;
-                  });
-                }
-              },
-              steps: _getSteps(),
-            ),
+      body: Stepper(
+        currentStep: _currentStep,
+        onStepContinue: () {
+          if (_currentStep < _getSteps().length - 1) {
+            setState(() => _currentStep++);
+          } else {
+            _submitForm();
+          }
+        },
+        onStepCancel: () {
+          if (_currentStep > 0) {
+            setState(() => _currentStep--);
+          }
+        },
+        steps: _getSteps(),
+      ),
+      floatingActionButton: _isLoading ? CircularProgressIndicator() : null,
+    );
+  }
+}
+
+class DateInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    // Remove all non-numeric characters
+    String formattedText = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+
+    // Add slashes after the second and fourth digits
+    if (formattedText.length >= 2) {
+      formattedText = formattedText.replaceRange(2, 2, '/');
+    }
+    if (formattedText.length >= 5) {
+      formattedText = formattedText.replaceRange(5, 5, '/');
+    }
+
+    // Ensure the cursor is positioned at the end of the text
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
     );
   }
 }

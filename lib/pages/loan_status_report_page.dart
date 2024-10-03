@@ -66,6 +66,8 @@ class _LoanStatusReportPageState extends State<LoanStatusReportPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Loan Status Report'),
+        backgroundColor: Colors.deepPurple, // Modern color
+        centerTitle: true,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -74,48 +76,74 @@ class _LoanStatusReportPageState extends State<LoanStatusReportPage> {
               child: _loanData.isEmpty
                   ? Center(child: Text('No loan data available.'))
                   : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Total Loans Display
                         Container(
-                          padding: EdgeInsets.all(12.0),
+                          padding: EdgeInsets.all(20.0),
                           decoration: BoxDecoration(
-                            color: Colors.blueAccent,
-                            borderRadius: BorderRadius.circular(8.0),
+                            color: Colors.deepPurple, // Modern color
+                            borderRadius: BorderRadius.circular(16.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10.0,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Column(
                             children: [
                               Text(
                                 'Total Loans:',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 20,
+                                  fontSize: 24,
                                 ),
                               ),
+                              SizedBox(height: 10),
                               Text(
                                 totalLoans.toString(),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 20,
+                                  fontSize: 32,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(height: 20),
+                        SizedBox(height: 30),
                         Text(
                           'Loan Status Summary',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple),
                         ),
                         SizedBox(height: 20),
                         DataTable(
                           columns: [
-                            DataColumn(label: Text('Status')),
-                            DataColumn(label: Text('Number of Loans')),
+                            DataColumn(
+                              label: Text(
+                                'Status',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Number of Loans',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                            ),
                           ],
                           rows: _loanData.map((loan) {
                             return DataRow(
@@ -125,6 +153,10 @@ class _LoanStatusReportPageState extends State<LoanStatusReportPage> {
                               ],
                             );
                           }).toList(),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.deepPurple),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ],
                     ),

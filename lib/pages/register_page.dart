@@ -93,7 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register'),
+        title: Text('Register Admin'),
         centerTitle: true,
       ),
       body: Padding(
@@ -165,7 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ? CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _register,
-                      child: Text('Register'),
+                      child: Text('Register Admin'),
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(

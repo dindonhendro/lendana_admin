@@ -19,9 +19,6 @@ class _EditMemberPageState extends State<EditMemberPage> {
   final _supabaseClient = Supabase.instance.client;
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _dobController = TextEditingController(); // DOB controller
-  final _addressController = TextEditingController(); // Address controller
-
   bool _isLoading = false;
   String? _profileImageUrl; // To hold the profile image URL
   File? _newProfileImage; // To hold the selected image file for update
@@ -47,8 +44,6 @@ class _EditMemberPageState extends State<EditMemberPage> {
       if (response != null) {
         _nameController.text = response['name'];
         _emailController.text = response['email'];
-        _dobController.text = response['dob']; // Fetch DOB
-        _addressController.text = response['address']; // Fetch Address
         _profileImageUrl = response['profile_image_url']; // Get the image URL
       }
     } catch (e) {
@@ -63,10 +58,7 @@ class _EditMemberPageState extends State<EditMemberPage> {
   }
 
   Future<void> _updateMember() async {
-    if (_nameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _dobController.text.isEmpty ||
-        _addressController.text.isEmpty) {
+    if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Please fill out all fields before submitting.'),
       ));
@@ -91,8 +83,6 @@ class _EditMemberPageState extends State<EditMemberPage> {
           .update({
             'name': _nameController.text,
             'email': _emailController.text,
-            'dob': _dobController.text, // Update DOB
-            'address': _addressController.text, // Update Address
             if (imageUrl != null)
               'profile_image_url': imageUrl, // Update image URL if changed
           })
@@ -158,8 +148,6 @@ class _EditMemberPageState extends State<EditMemberPage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _dobController.dispose(); // Dispose DOB controller
-    _addressController.dispose(); // Dispose Address controller
     super.dispose();
   }
 
@@ -213,22 +201,6 @@ class _EditMemberPageState extends State<EditMemberPage> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _dobController,
-                      decoration: InputDecoration(
-                        labelText: 'Date of Birth',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _addressController,
-                      decoration: InputDecoration(
-                        labelText: 'Address',
                         border: OutlineInputBorder(),
                       ),
                     ),

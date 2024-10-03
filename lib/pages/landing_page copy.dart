@@ -1,60 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lendana_admin/pages/admin_dashboard.dart';
 import 'package:lendana_admin/pages/add_member_page.dart';
 import 'package:lendana_admin/pages/loan_status_report_page.dart';
 
-class LandingPage extends StatefulWidget {
-  @override
-  _LandingPageState createState() => _LandingPageState();
-}
-
-class _LandingPageState extends State<LandingPage> {
-  String? userName;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserName();
-  }
-
-  Future<void> _fetchUserName() async {
-    final user = Supabase.instance.client.auth.currentUser;
-
-    if (user != null) {
-      try {
-        // Fetch user name from the users table based on user_id
-        final response = await Supabase.instance.client
-            .from('users')
-            .select('name') // Adjust based on your schema
-            .eq('user_id', user.id) // Assuming user_id is the identifier
-            .single(); // Fetch a single record
-
-        if (response != null) {
-          setState(() {
-            userName = response['name']; // Extracting name from response
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Error fetching user name: No data returned.'),
-            backgroundColor: Colors.red,
-          ));
-        }
-      } catch (e) {
-        // Handle any errors during the fetch
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error fetching user name: $e'),
-          backgroundColor: Colors.red,
-        ));
-      }
-    }
-  }
-
+class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome ${userName ?? 'User'}'),
+        title: Text('Welcome User'),
         backgroundColor: Colors.teal,
       ),
       body: Padding(
@@ -63,7 +17,7 @@ class _LandingPageState extends State<LandingPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome ${userName ?? 'User'}',
+              'Welcome User',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

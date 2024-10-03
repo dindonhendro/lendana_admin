@@ -17,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _supabaseClient = Supabase.instance.client;
   bool _isLoading = false;
-  bool _cameraPermissionGranted = false;
 
   Future<void> _login() async {
     setState(() {
@@ -49,76 +48,35 @@ class _LoginPageState extends State<LoginPage> {
           final isBank = userResponse['is_bank'] ?? false;
 
           if (isAdmin) {
-            // Navigate to Admin Dashboard if user is an admin
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => LandingPage()),
             );
           } else if (isBank) {
-            // Navigate to Bank Dashboard if user is a bank user
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => LandingPageBank()),
             );
-          } else {
-            // Show camera permission dialog for regular users
-            _showCameraPermissionDialog();
           }
         }
       } else {
-        // Show login failure message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Login failed.'),
-          ));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Login failed.'),
+        ));
       }
     } on AuthException catch (e) {
-      // Show specific Supabase Auth error
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: ${e.message}'),
-        ));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error: ${e.message}'),
+      ));
     } catch (e) {
-      // Show unexpected error message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Unexpected error occurred: $e'),
-        ));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error occurred: $e'),
+      ));
     }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _showCameraPermissionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Camera Permission'),
-          content: Text(
-              'This app requires access to your camera to provide a better experience. Do you want to grant camera permission?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {},
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   // Forgot Password
@@ -146,90 +104,97 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: Text('Login Admin'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              // Company Logo
-              Image.asset(
-                'assets/lendana.png',
-                height: 100,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: SingleChildScrollView(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: 400, // Limit width for web
               ),
-              SizedBox(height: 40),
-              // Email TextField with Icon
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              // Password TextField with Icon
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(),
-                  ),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 20),
-              // Login Button
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _login,
-                      child: Text('Login'),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                      ),
-                    ),
-              SizedBox(height: 20),
-              // Forgot Password Button
-              TextButton(
-                onPressed: _resetPassword,
-                child: Text('Forgot Password?'),
-              ),
-              SizedBox(height: 20),
-              // Register Button at the bottom
-              Row(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Don\'t have an account? '),
-                  TextButton(
-                    onPressed: () {
-                      // Navigate to Register Page
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => RegisterPage()),
-                      );
-                    },
-                    child: Text(
-                      'Register',
-                      style: TextStyle(color: Colors.blue),
+                  SizedBox(height: 20),
+                  // Company Logo
+                  Image.asset(
+                    'assets/lendana.png',
+                    height: 100,
+                  ),
+                  SizedBox(height: 40),
+                  // Email TextField with Icon
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide(),
+                      ),
                     ),
+                  ),
+                  SizedBox(height: 20),
+                  // Password TextField with Icon
+                  TextField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide(),
+                      ),
+                    ),
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 20),
+                  // Login Button
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: _login,
+                          child: Text('Login'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
+                        ),
+                  SizedBox(height: 20),
+                  // Forgot Password Button
+                  TextButton(
+                    onPressed: _resetPassword,
+                    child: Text('Forgot Password?'),
+                  ),
+                  SizedBox(height: 20),
+                  // Register Button at the bottom
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Don\'t have an account? '),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => RegisterPage()),
+                          );
+                        },
+                        child: Text(
+                          'Register',
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
