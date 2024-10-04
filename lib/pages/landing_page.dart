@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lendana_admin/pages/admin_dashboard_table.dart';
+import 'package:lendana_admin/pages/mob_admin_dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lendana_admin/pages/admin_dashboard.dart';
 import 'package:lendana_admin/pages/add_member_page.dart';
@@ -87,7 +89,7 @@ class _LandingPageState extends State<LandingPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AdminDashboard(),
+                          builder: (context) => AdminDashboardTable(),
                         ),
                       );
                     },
@@ -120,6 +122,20 @@ class _LandingPageState extends State<LandingPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => LoanStatusReportPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildGridButton(
+                    context,
+                    title: 'Data From Mobile Apps',
+                    color: Colors.purple[300]!,
+                    icon: Icons.dashboard_customize,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MobAdminDashboard(),
                         ),
                       );
                     },

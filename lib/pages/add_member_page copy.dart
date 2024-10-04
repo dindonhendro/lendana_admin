@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart'; // Use file_picker instead of image_picker
 import 'package:intl/intl.dart'; // For currency formatting
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:universal_io/io.dart'; // Use universal_io instead of dart:io
 
 class AddMemberPage extends StatefulWidget {
   final Function onMemberAdded;

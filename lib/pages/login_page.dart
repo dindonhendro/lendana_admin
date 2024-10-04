@@ -168,29 +168,15 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   // Forgot Password Button
                   TextButton(
-                    onPressed: _resetPassword,
+                    onPressed: () {},
+                    //_resetPassword,
                     child: Text('Forgot Password?'),
                   ),
                   SizedBox(height: 20),
                   // Register Button at the bottom
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Don\'t have an account? '),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => RegisterPage()),
-                          );
-                        },
-                        child: Text(
-                          'Register',
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
-                    ],
+                    children: [],
                   ),
                 ],
               ),

@@ -322,52 +322,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w500,
                                                     color: status == 'approved'
-                                                        ? Colors.green
+                                                        ? Colors.green[700]
                                                         : status == 'rejected'
-                                                            ? Colors.red
-                                                            : Colors.orange,
+                                                            ? Colors.red[700]
+                                                            : Colors
+                                                                .orange[700],
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        SizedBox(width: 16),
 
-                                        // Edit and Delete buttons
+                                        // Edit and Delete buttons with hover animation
                                         Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            // Edit Button
-                                            ElevatedButton(
-                                              onPressed: () => _updateMember(
-                                                  member), // Call update member method
-                                              child: Text('Edit'),
-                                              style: ElevatedButton.styleFrom(
-                                                //  primary: Colors.blue,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(height: 8),
-                                            // Delete Button
-                                            CircleAvatar(
-                                              radius: 25,
-                                              backgroundColor: Colors.red,
-                                              child: IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete,
-                                                    color: Colors.white,
-                                                  ),
-                                                  onPressed: () => () {}
-                                                  //_deleteMember(
-                                                  //    member), // Call delete member method
-                                                  ),
-                                            ),
-                                          ],
+                                          children: [],
                                         ),
                                       ],
                                     ),

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // Add image picker package
+import 'package:file_picker/file_picker.dart'; // Import file picker package
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditMemberPage extends StatefulWidget {
@@ -126,7 +126,8 @@ class _EditMemberPageState extends State<EditMemberPage> {
       // Upload the image and get the file path as a response
       final filePath = 'public/${widget.id}/profile_image.png';
       final response = await _supabaseClient.storage
-          .from('profile_images') // Assuming 'avatars' is the bucket name
+          .from(
+              'profile_images') // Assuming 'profile_images' is the bucket name
           .upload(filePath, image);
 
       // If upload is successful, generate the public URL for the image
@@ -145,14 +146,36 @@ class _EditMemberPageState extends State<EditMemberPage> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+    // Use file_picker to select an image
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false, // Allow only single file selection
+    );
+
+    if (result != null && result.files.isNotEmpty) {
       setState(() {
-        _newProfileImage = File(pickedFile.path); // Update the selected image
+        _newProfileImage =
+            File(result.files.single.path!); // Update the selected image
       });
     }
   }
+
+//  Future<void> _pickImage(bool isProfileImage) async {
+//     FilePickerResult? result = await FilePicker.platform.pickFiles(
+//       type: FileType.image,
+//       withData: true,
+//     );
+
+//     if (result != null) {
+//       setState(() {
+//         if (isProfileImage) {
+//           _profileImage = result.files.first;
+//         } else {
+//           _passportImage = result.files.first;
+//         }
+//       });
+//     }
+//   }
 
   @override
   void dispose() {
@@ -189,14 +212,14 @@ class _EditMemberPageState extends State<EditMemberPage> {
                                     : AssetImage('assets/default_avatar.png')
                                         as ImageProvider,
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: IconButton(
-                              icon: Icon(Icons.edit),
-                              onPressed: _pickImage,
-                            ),
-                          ),
+                          // Positioned(
+                          //   bottom: 0,
+                          //   right: 0,
+                          //   child: IconButton(
+                          //       icon: Icon(Icons.edit), onPressed: () {}
+                          //       // _pickImage,
+                          //       ),
+                          // ),
                         ],
                       ),
                     ),

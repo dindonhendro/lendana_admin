@@ -4,12 +4,12 @@ import 'package:lendana_admin/pages/bank_dashboard.dart';
 import 'package:lendana_admin/pages/edit_member_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AdminDashboard extends StatefulWidget {
+class MobAdminDashboard extends StatefulWidget {
   @override
-  _AdminDashboardState createState() => _AdminDashboardState();
+  _MobAdminDashboardState createState() => _MobAdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
+class _MobAdminDashboardState extends State<MobAdminDashboard> {
   final _supabaseClient = Supabase.instance.client;
   List<dynamic> _members = [];
   List<dynamic> _filteredMembers = [];
@@ -32,8 +32,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
 
     try {
-      final response = await _supabaseClient.from('members').select(
-          '*, loan_applications(status)'); // Fetching status from loan_applications
+      final response = await _supabaseClient
+          .from('users')
+          .select(); // Fetching status from loan_applications
 
       print("Fetched members: $response"); // Debug print
 
@@ -95,52 +96,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
           id: member['id'],
           onMemberUpdated: _fetchMembers,
         ),
-      ),
-    );
-  }
-
-  Future<void> _deleteMember(dynamic member) async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Member'),
-        content: Text('Are you sure you want to delete this member?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                final response = await _supabaseClient
-                    .from('members')
-                    .delete()
-                    .eq('id', member['id']);
-
-                if (response != null) {
-                  _fetchMembers();
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Member deleted successfully!'),
-                    backgroundColor: primaryColor,
-                  ));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Error deleting member: No data returned.'),
-                    backgroundColor: Colors.red,
-                  ));
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('Error deleting member: $e'),
-                  backgroundColor: Colors.red,
-                ));
-              }
-            },
-            child: Text('Delete'),
-          ),
-        ],
       ),
     );
   }
@@ -210,7 +165,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 shadowColor: Colors.grey.withOpacity(0.5),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(16),
-                                  onTap: () => _updateMember(member),
+                                  onTap: () => {},
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Row(
@@ -322,52 +277,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w500,
                                                     color: status == 'approved'
-                                                        ? Colors.green
+                                                        ? Colors.green[700]
                                                         : status == 'rejected'
-                                                            ? Colors.red
-                                                            : Colors.orange,
+                                                            ? Colors.red[700]
+                                                            : Colors
+                                                                .orange[700],
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        SizedBox(width: 16),
 
-                                        // Edit and Delete buttons
+                                        // Edit and Delete buttons with hover animation
                                         Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            // Edit Button
-                                            ElevatedButton(
-                                              onPressed: () => _updateMember(
-                                                  member), // Call update member method
-                                              child: Text('Edit'),
-                                              style: ElevatedButton.styleFrom(
-                                                //  primary: Colors.blue,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(height: 8),
-                                            // Delete Button
-                                            CircleAvatar(
-                                              radius: 25,
-                                              backgroundColor: Colors.red,
-                                              child: IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete,
-                                                    color: Colors.white,
-                                                  ),
-                                                  onPressed: () => () {}
-                                                  //_deleteMember(
-                                                  //    member), // Call delete member method
-                                                  ),
-                                            ),
-                                          ],
+                                          children: [],
                                         ),
                                       ],
                                     ),
