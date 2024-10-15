@@ -1,0 +1,14 @@
+{
+    "subdistricts": {
+      "1101": [ 
+        {"id": 110101, "nama": "Simeulue Timur"},
+        {"id": 110102, "nama": "Teluk Dalam"}
+      ],
+      "1102": [ 
+        {"id": 110201, "nama": "Singkil Utara"},
+        {"id": 110202, "nama": "Singkil Selatan"}
+      ]
+
+    }
+  }
+  

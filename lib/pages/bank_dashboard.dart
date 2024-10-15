@@ -34,7 +34,7 @@ class _BankDashboardState extends State<BankDashboard> {
       final response = await _supabaseClient
           .from('loan_applications')
           .select(
-              '*, members(profile_image_url, name)') // Fetch related member data
+              '*, members(loan_amount, profile_image_url, name)') // Fetch loan_amount from members
           .order('created_at', ascending: false)
           .range((_currentPage - 1) * _itemsPerPage,
               _currentPage * _itemsPerPage - 1);
@@ -201,6 +201,7 @@ class _BankDashboardState extends State<BankDashboard> {
               onChanged: _filterLoans,
             ),
           ),
+          // Update the ListView.builder to display loan amount from members
           Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator())
@@ -225,10 +226,9 @@ class _BankDashboardState extends State<BankDashboard> {
                             child: Card(
                               margin: EdgeInsets.symmetric(
                                   vertical: 8, horizontal: 16),
-                              elevation: 4, // Added elevation for card effect
+                              elevation: 4,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    12.0), // Rounded corners
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
@@ -239,15 +239,13 @@ class _BankDashboardState extends State<BankDashboard> {
                                       'Member: ${member['name'] ?? 'N/A'}',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 18, // Increased font size
+                                        fontSize: 18,
                                       ),
                                     ),
                                     SizedBox(height: 8),
                                     Text(
-                                      'Loan Amount: ${loan['loan_amount'] ?? 'N/A'}',
-                                      style: TextStyle(
-                                          color: Colors
-                                              .grey[600]), // Lighter text color
+                                      'Loan Amount: ${member['loan_amount'] ?? 'N/A'}', // Fetch from members
+                                      style: TextStyle(color: Colors.grey[600]),
                                     ),
                                     Text(
                                       'Loan Status: ${loan['status'] ?? 'N/A'}',
@@ -267,8 +265,7 @@ class _BankDashboardState extends State<BankDashboard> {
                                                   loan, 'approved')
                                               : null,
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors
-                                                .green, // Approved button color
+                                            backgroundColor: Colors.green,
                                           ),
                                           child: Text('Approve'),
                                         ),
@@ -279,8 +276,7 @@ class _BankDashboardState extends State<BankDashboard> {
                                                   loan, 'rejected')
                                               : null,
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors
-                                                .red, // Rejected button color
+                                            backgroundColor: Colors.red,
                                           ),
                                           child: Text('Reject'),
                                         ),

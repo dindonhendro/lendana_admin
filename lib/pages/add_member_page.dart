@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart'; // Use file_picker instead of image_picker
 import 'package:intl/intl.dart'; // For currency formatting
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:universal_io/io.dart'; // Use universal_io instead of dart:io
 
 class AddMemberPage extends StatefulWidget {
   final Function onMemberAdded;
@@ -110,6 +111,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
 
     setState(() => _isLoading = true);
     try {
+      final userId = _supabaseClient.auth.currentUser?.id;
       final profileImageUrl =
           await _uploadImage(_profileImage!, 'profile_images');
       final passportImageUrl =
@@ -128,13 +130,18 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'profile_image_url': profileImageUrl,
         'passport_image_url': passportImageUrl,
         'is_approved': false,
+        'admin_id': userId,
       }).select();
 
       if (memberResponse.isEmpty) throw Exception('Error adding member.');
 
       final memberId = memberResponse.first['id'];
+      print('XXXX Member ID: $memberId');
       final loanResponse =
           await _supabaseClient.from('loan_applications').insert({
+        'loan_amount': _loanAmountController.text
+            .replaceAll('Rp ', '')
+            .replaceAll('.', ''),
         'member_id': memberId,
         'status': 'pending',
         'reviewed_by': null,

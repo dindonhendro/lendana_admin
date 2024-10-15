@@ -1,0 +1,16 @@
+{
+    "districts": {
+      "11": [ 
+        {"id": 1101, "nama": "Simeulue"},
+        {"id": 1102, "nama": "Aceh Singkil"},
+        {"id": 1103, "nama": "Aceh Selatan"}
+      ],
+      "12": [ 
+        {"id": 1201, "nama": "Nias"},
+        {"id": 1202, "nama": "Mandailing Natal"},
+        {"id": 1203, "nama": "Tapanuli Selatan"}
+      ]
+      
+    }
+  }
+  

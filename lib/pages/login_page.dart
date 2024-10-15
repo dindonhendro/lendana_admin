@@ -170,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextButton(
                     onPressed: () {},
                     //_resetPassword,
-                    child: Text('Forgot Password?'),
+                    child: Text(''),
                   ),
                   SizedBox(height: 20),
                   // Register Button at the bottom

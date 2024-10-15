@@ -1,15 +1,17 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart'; // Import file picker package
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditMemberPage extends StatefulWidget {
-  final String id; // Accept the member ID
+  final String id;
   final Function onMemberUpdated;
 
-  const EditMemberPage(
-      {Key? key, required this.id, required this.onMemberUpdated})
-      : super(key: key);
+  const EditMemberPage({
+    Key? key,
+    required this.id, // Ensure the id parameter is required
+    required this.onMemberUpdated,
+  }) : super(key: key);
 
   @override
   _EditMemberPageState createState() => _EditMemberPageState();
@@ -17,256 +19,213 @@ class EditMemberPage extends StatefulWidget {
 
 class _EditMemberPageState extends State<EditMemberPage> {
   final _supabaseClient = Supabase.instance.client;
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _dobController = TextEditingController(); // DOB controller
-  final _addressController = TextEditingController(); // Address controller
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nikController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _loanAmountController = TextEditingController();
 
   bool _isLoading = false;
-  String? _profileImageUrl; // To hold the profile image URL
-  File? _newProfileImage; // To hold the selected image file for update
+  int _currentStep = 0;
 
   @override
   void initState() {
     super.initState();
-    _fetchMemberDetails();
+    _loadMemberData(); // Load existing member data
   }
 
-  Future<void> _fetchMemberDetails() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  // Load member data from Supabase
+  Future<void> _loadMemberData() async {
+    setState(() => _isLoading = true);
     try {
+      // Fetching member data based on member ID
       final response = await _supabaseClient
           .from('members')
           .select()
           .eq('id', widget.id)
-          .single(); // Get the single record
+          .single();
 
-      if (response != null) {
-        _nameController.text = response['name'];
-        _emailController.text = response['email'];
-        _dobController.text = response['dob']; // Fetch DOB
-        _addressController.text = response['address']; // Fetch Address
-        _profileImageUrl = response['profile_image_url']; // Get the image URL
+      // Check if the response contains any data
+      if (response.isEmpty) {
+        _showSnackBar('No member found with the given ID.');
+        return;
       }
+
+      // Access the member data directly from response
+      final member = response;
+
+      // Populate text fields with member data
+      _nameController.text = member['name'] ?? '';
+      _emailController.text = member['email'] ?? '';
+      _phoneController.text = member['phone'] ?? '';
+      _nikController.text = member['nik'] ?? '';
+      _dobController.text = member['dob'] ?? '';
+      _addressController.text = member['address'] ?? '';
+      _loanAmountController.text =
+          _formatCurrency(member['loan_amount'] ?? '0');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error fetching member details: $e'),
-      ));
+      // Handle any unexpected errors
+      _showSnackBar('Error loading member data: ${e.toString()}');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      // Always set loading to false
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _updateMember() async {
-    if (_nameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _dobController.text.isEmpty ||
-        _addressController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Please fill out all fields before submitting.'),
-      ));
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      String? imageUrl;
-
-      // If a new profile image was selected, upload it first
-      if (_newProfileImage != null) {
-        imageUrl = await _uploadImage(_newProfileImage!);
-      }
-
-      // Perform the update
       final response = await _supabaseClient
           .from('members')
           .update({
             'name': _nameController.text,
             'email': _emailController.text,
-            'dob': _dobController.text, // Update DOB
-            'address': _addressController.text, // Update Address
-            if (imageUrl != null)
-              'profile_image_url': imageUrl, // Update image URL if changed
+            'phone': _phoneController.text,
+            'nik': _nikController.text,
+            'dob': _dobController.text,
+            'address': _addressController.text,
+            'loan_amount': _loanAmountController.text
+                .replaceAll('Rp ', '')
+                .replaceAll('.', ''),
           })
           .eq('id', widget.id)
-          .select(); // This will retrieve the updated row data
+          .select();
 
-      if (response != null && response.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Member updated successfully!'),
-        ));
-        widget.onMemberUpdated(); // Refresh the member list
-        Navigator.pop(context); // Go back after updating
+      print('Update Response: $response');
+
+      if (response.isEmpty) {
+        throw Exception('Error updating member: ${response}');
+      } else if (response.isEmpty) {
+        throw Exception('No rows were updated. Check if the ID is correct.');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error updating member: No data returned.'),
-        ));
+        print('Member updated successfully.');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error updating member: $e'),
-      ));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print('Exception: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating member: ${e.toString()}')),
+      );
     }
   }
 
-  Future<String?> _uploadImage(File image) async {
-    try {
-      // Upload the image and get the file path as a response
-      final filePath = 'public/${widget.id}/profile_image.png';
-      final response = await _supabaseClient.storage
-          .from(
-              'profile_images') // Assuming 'profile_images' is the bucket name
-          .upload(filePath, image);
-
-      // If upload is successful, generate the public URL for the image
-      if (response != null) {
-        final publicUrl = _supabaseClient.storage
-            .from('profile_images')
-            .getPublicUrl(filePath);
-        return publicUrl;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error uploading image: $e'),
-      ));
-    }
-    return null;
+  // Show a snackbar with a message
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _pickImage() async {
-    // Use file_picker to select an image
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false, // Allow only single file selection
+  // Define steps for the Stepper widget
+  List<Step> _getSteps() {
+    return [
+      Step(
+        title: Text('Member Info'),
+        content: Column(
+          children: [
+            _buildTextField('Name', _nameController),
+            _buildTextField('Phone', _phoneController),
+            _buildTextField('NIK', _nikController),
+            _buildTextField('Email', _emailController),
+            _buildTextField('Date of Birth (dd/mm/yyyy)', _dobController,
+                inputType: TextInputType.datetime),
+            _buildTextField('Address', _addressController),
+            _buildTextField('Loan Amount', _loanAmountController,
+                inputType: TextInputType.number,
+                onChanged: _onLoanAmountChanged),
+          ],
+        ),
+        isActive: _currentStep == 0,
+      ),
+      Step(
+        title: Text('Review & Submit'),
+        content: Column(
+          children: [
+            Text('Review all the information before submission.'),
+            SizedBox(height: 20),
+            _buildActionButton('Update', _updateMember),
+          ],
+        ),
+        isActive: _currentStep == 1,
+      ),
+    ];
+  }
+
+  // Utility method to build a text field
+  Widget _buildTextField(String label, TextEditingController controller,
+      {TextInputType inputType = TextInputType.text,
+      Function(String)? onChanged}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label),
+      keyboardType: inputType,
+      onChanged: onChanged,
     );
-
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _newProfileImage =
-            File(result.files.single.path!); // Update the selected image
-      });
-    }
   }
 
-//  Future<void> _pickImage(bool isProfileImage) async {
-//     FilePickerResult? result = await FilePicker.platform.pickFiles(
-//       type: FileType.image,
-//       withData: true,
-//     );
+  // Utility method to build an action button
+  Widget _buildActionButton(String label, VoidCallback onPressed) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text(label),
+    );
+  }
 
-//     if (result != null) {
-//       setState(() {
-//         if (isProfileImage) {
-//           _profileImage = result.files.first;
-//         } else {
-//           _passportImage = result.files.first;
-//         }
-//       });
-//     }
-//   }
+  // Handle loan amount change and format it
+  void _onLoanAmountChanged(String value) {
+    final formattedAmount = _formatCurrency(value);
+    _loanAmountController.value = TextEditingValue(
+      text: formattedAmount,
+      selection: TextSelection.collapsed(offset: formattedAmount.length),
+    );
+  }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _dobController.dispose(); // Dispose DOB controller
-    _addressController.dispose(); // Dispose Address controller
-    super.dispose();
+  String _formatCurrency(String amount) {
+    final formatter =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    String numericString = amount.replaceAll(RegExp(r'[^\d]'), '');
+    if (numericString.isEmpty) return '';
+    final numericAmount = int.tryParse(numericString);
+    return numericAmount != null ? formatter.format(numericAmount) : amount;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Member'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      appBar: AppBar(title: Text('Edit Member')),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Stepper(
+              steps: _getSteps(),
+              currentStep: _currentStep,
+              onStepTapped: (step) => setState(() => _currentStep = step),
+              onStepContinue: () {
+                if (_currentStep < 1) {
+                  setState(() => _currentStep += 1);
+                } else {
+                  _updateMember();
+                }
+              },
+              onStepCancel: () {
+                if (_currentStep > 0) {
+                  setState(() => _currentStep -= 1);
+                }
+              },
+              controlsBuilder: (BuildContext context, ControlsDetails details) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundImage: _newProfileImage != null
-                                ? FileImage(_newProfileImage!)
-                                : _profileImageUrl != null
-                                    ? NetworkImage(_profileImageUrl!)
-                                    : AssetImage('assets/default_avatar.png')
-                                        as ImageProvider,
-                          ),
-                          // Positioned(
-                          //   bottom: 0,
-                          //   right: 0,
-                          //   child: IconButton(
-                          //       icon: Icon(Icons.edit), onPressed: () {}
-                          //       // _pickImage,
-                          //       ),
-                          // ),
-                        ],
-                      ),
+                    ElevatedButton(
+                      onPressed: details.onStepCancel,
+                      child: Text('Back'),
                     ),
-                    SizedBox(height: 20),
-                    TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Name',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _dobController,
-                      decoration: InputDecoration(
-                        labelText: 'Date of Birth',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _addressController,
-                      decoration: InputDecoration(
-                        labelText: 'Address',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _updateMember,
-                        child: Text('Update Member'),
-                      ),
+                    ElevatedButton(
+                      onPressed: details.onStepContinue,
+                      child: Text(_currentStep == 1 ? 'Submit' : 'Next'),
                     ),
                   ],
-                ),
-              ),
-      ),
+                );
+              },
+            ),
     );
   }
 }

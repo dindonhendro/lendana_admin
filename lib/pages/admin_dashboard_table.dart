@@ -33,10 +33,13 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
     });
 
     try {
-      final response = await _supabaseClient.from('members').select(
-          '*, loan_applications(status)'); // Fetching status from loan_applications
-
-      if (response != null) {
+      final userId = _supabaseClient.auth.currentUser?.id;
+      final response = await _supabaseClient
+          .from('members')
+          .select('*, loan_applications(status, loan_amount)')
+          .eq('admin_id', userId!);
+      print(response);
+      if (response.isNotEmpty) {
         setState(() {
           _members = response;
           _filteredMembers = response; // Initialize filtered list
@@ -52,11 +55,11 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
         content: Text('Error fetching members: $e'),
         backgroundColor: Colors.red,
       ));
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _filterMembers(String query) {
@@ -67,11 +70,11 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
             member['name']?.toLowerCase().contains(query.toLowerCase()) ??
                 false;
         final statusMatch = member['loan_applications'] != null &&
+                member['loan_applications'].isNotEmpty &&
                 member['loan_applications'][0]['status']
                     ?.toLowerCase()
                     .contains(query.toLowerCase()) ??
             false;
-
         return nameMatch || statusMatch;
       }).toList();
     });
@@ -87,6 +90,7 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
   }
 
   Future<void> _updateMember(dynamic member) async {
+    print("Navigating to edit member with ID: ${member['id']}");
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -118,8 +122,8 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
                     .delete()
                     .eq('id', member['id']);
 
-                if (response != null) {
-                  _fetchMembers();
+                if (response != null && response.length > 0) {
+                  await _fetchMembers(); // Await the fetch to ensure UI updates
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text('Member deleted successfully!'),
                     backgroundColor: primaryColor,
@@ -202,7 +206,8 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
                               child: DataTable(
                                 headingRowColor:
                                     MaterialStateProperty.resolveWith(
-                                        (states) => primaryColor),
+                                  (states) => primaryColor,
+                                ),
                                 dataRowColor: MaterialStateProperty.resolveWith(
                                   (states) =>
                                       states.contains(MaterialState.hovered)
@@ -222,13 +227,25 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
                                   DataColumn(label: Text('NIK')),
                                   DataColumn(label: Text('DOB')),
                                   DataColumn(label: Text('Loan Status')),
+                                  DataColumn(label: Text('Loan Amount')),
                                   DataColumn(label: Text('Actions')),
                                 ],
                                 rows: _filteredMembers.map((member) {
                                   final status = member['loan_applications'] !=
-                                          null
+                                              null &&
+                                          member['loan_applications'].isNotEmpty
                                       ? member['loan_applications'][0]['status']
-                                      : 'No Status'; // Fetching status from loan_applications
+                                      : 'No Status';
+
+                                  final loanAmount =
+                                      member['loan_applications'] != null &&
+                                              member['loan_applications']
+                                                  .isNotEmpty
+                                          ? member['loan_applications'][0]
+                                                      ['loan_amount']
+                                                  ?.toString() ??
+                                              '0'
+                                          : 'No Amount';
 
                                   return DataRow(
                                     cells: [
@@ -240,7 +257,23 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
                                           Text(member['phone'] ?? 'No Phone')),
                                       DataCell(Text(member['nik'] ?? 'No NIK')),
                                       DataCell(Text(member['dob'] ?? 'No DOB')),
-                                      DataCell(Text(status)),
+                                      DataCell(Text(member[
+                                                      'loan_applications'] !=
+                                                  null &&
+                                              member['loan_applications']
+                                                  .isNotEmpty
+                                          ? member['loan_applications'][0]
+                                              ['status']
+                                          : 'No Status')), // Adjusted access based on response structure
+                                      DataCell(Text(
+                                          member['loan_applications'] != null &&
+                                                  member['loan_applications']
+                                                      .isNotEmpty
+                                              ? member['loan_applications'][0]
+                                                          ['loan_amount']
+                                                      ?.toString() ??
+                                                  '0'
+                                              : 'No Amount')),
                                       DataCell(
                                         Row(
                                           children: [
