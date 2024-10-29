@@ -3,7 +3,7 @@ import 'package:lendana_admin/pages/bank_dashboard.dart';
 import 'package:lendana_admin/pages/landing_page.dart';
 import 'package:lendana_admin/pages/landing_page_bank%20.dart';
 import 'package:lendana_admin/pages/register_page.dart';
-import 'package:lendana_admin/pages/admin_dashboard.dart'; // Import Admin Dashboard
+// Import Admin Dashboard
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 

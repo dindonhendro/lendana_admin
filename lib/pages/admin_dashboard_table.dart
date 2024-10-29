@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lendana_admin/pages/add_member_page.dart';
 import 'package:lendana_admin/pages/bank_dashboard.dart';
+import 'package:lendana_admin/pages/display_member_page.dart';
 import 'package:lendana_admin/pages/edit_member_page.dart';
+import 'package:lendana_admin/pages/update_member_page.dart';
+import 'package:lendana_admin/page2/update_page.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminDashboardTable extends StatefulWidget {
@@ -94,7 +98,7 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditMemberPage(
+        builder: (context) => UpdateMemberPage(
           id: member['id'],
           onMemberUpdated: _fetchMembers,
         ),
@@ -288,6 +292,23 @@ class _AdminDashboardTableState extends State<AdminDashboardTable> {
                                                   color: Colors.red),
                                               onPressed: () =>
                                                   _deleteMember(member),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.visibility,
+                                                  color:
+                                                      Colors.green), // New icon
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        DisplayMemberPage(
+                                                      memberId: member[
+                                                          'id'], // Pass the UUID as a String
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           ],
                                         ),

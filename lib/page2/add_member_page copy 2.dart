@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart'; // Use file_picker instead of image_picker
 import 'package:intl/intl.dart'; // For currency formatting
+import 'package:lendana_admin/components/card_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:universal_io/io.dart'; // Use universal_io instead of dart:io
 
@@ -28,6 +29,16 @@ class _AddMemberPageState extends State<AddMemberPage> {
   PlatformFile? _identityImage;
   PlatformFile? _familyImage;
   PlatformFile? _doc1Image;
+  PlatformFile? _doc2Image;
+  PlatformFile? _doc3Image;
+  PlatformFile? _doc4Image;
+  PlatformFile? _doc5Image;
+  PlatformFile? _doc6Image;
+  PlatformFile? _doc7Image;
+  PlatformFile? _doc8Image;
+  PlatformFile? _doc9Image;
+  PlatformFile? _doc10Image;
+
   bool _isLoading = false;
   int _currentStep = 0;
 
@@ -74,6 +85,33 @@ class _AddMemberPageState extends State<AddMemberPage> {
             break;
           case 'doc1':
             _doc1Image = result.files.first;
+            break;
+          case 'doc2':
+            _doc2Image = result.files.first;
+            break;
+          case 'doc3':
+            _doc3Image = result.files.first;
+            break;
+          case 'doc4':
+            _doc4Image = result.files.first;
+            break;
+          case 'doc5':
+            _doc5Image = result.files.first;
+            break;
+          case 'doc6':
+            _doc6Image = result.files.first;
+            break;
+          case 'doc7':
+            _doc7Image = result.files.first;
+            break;
+          case 'doc8':
+            _doc8Image = result.files.first;
+            break;
+          case 'doc9':
+            _doc9Image = result.files.first;
+            break;
+          case 'doc10':
+            _doc10Image = result.files.first;
             break;
         }
       });
@@ -138,6 +176,15 @@ class _AddMemberPageState extends State<AddMemberPage> {
           await _uploadImage(_identityImage!, 'identity_image');
       final familyImageUrl = await _uploadImage(_familyImage!, 'family_image');
       final doc1ImageUrl = await _uploadImage(_doc1Image!, 'doc1');
+      final doc2ImageUrl = await _uploadImage(_doc2Image!, 'doc2');
+      final doc3ImageUrl = await _uploadImage(_doc3Image!, 'doc3');
+      final doc4ImageUrl = await _uploadImage(_doc4Image!, 'doc4');
+      final doc5ImageUrl = await _uploadImage(_doc5Image!, 'doc5');
+      final doc6ImageUrl = await _uploadImage(_doc6Image!, 'doc6');
+      final doc7ImageUrl = await _uploadImage(_doc7Image!, 'doc7');
+      final doc8ImageUrl = await _uploadImage(_doc8Image!, 'doc8');
+      final doc9ImageUrl = await _uploadImage(_doc9Image!, 'doc9');
+      final doc10ImageUrl = await _uploadImage(_doc10Image!, 'doc10');
 
       final memberResponse = await _supabaseClient.from('members').insert({
         'name': _nameController.text,
@@ -153,6 +200,16 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'passport_image_url': passportImageUrl,
         'identity_image_url': identityImageUrl,
         'family_image_url': familyImageUrl,
+        'doc1_image_url': doc1ImageUrl,
+        'doc2_image_url': doc2ImageUrl,
+        'doc3_image_url': doc3ImageUrl,
+        'doc4_image_url': doc4ImageUrl,
+        'doc5_image_url': doc5ImageUrl,
+        'doc6_image_url': doc6ImageUrl,
+        'doc7_image_url': doc7ImageUrl,
+        'doc8_image_url': doc8ImageUrl,
+        'doc9_image_url': doc9ImageUrl,
+        'doc10_image_url': doc10ImageUrl,
         'is_approved': false,
         'admin_id': userId,
       }).select();
@@ -223,35 +280,152 @@ class _AddMemberPageState extends State<AddMemberPage> {
       ),
       Step(
         title: Text('Upload Images'),
-        content: Column(
+        content: Wrap(
+          spacing: 20, // Horizontal spacing between items
+          runSpacing: 20, // Vertical spacing between rows
           children: [
-            Row(
-              children: [
-                _buildImagePreview('Profile Image', _profileImage),
-                _buildImagePickerButton(
-                    'Select Profile Image', () => _pickImage('profile')),
-                SizedBox(height: 10),
-                _buildImagePreview('Passport Image', _passportImage),
-                _buildImagePickerButton(
-                    'Select Passport Image', () => _pickImage('passport')),
-              ],
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Profile Image', _profileImage),
+                  _buildImagePickerButton(
+                      'Select Profile Image', () => _pickImage('profile')),
+                ],
+              ),
             ),
-            Row(
-              children: [
-                SizedBox(height: 10),
-                _buildImagePreview('Identity Image', _identityImage),
-                _buildImagePickerButton(
-                    'Select Identity  Image', () => _pickImage('identity')),
-                SizedBox(height: 10),
-                _buildImagePreview('Family Image', _familyImage),
-                _buildImagePickerButton(
-                    'Select Family Image', () => _pickImage('family')),
-                SizedBox(height: 10),
-                _buildImagePreview('Doc1 Image', _doc1Image),
-                _buildImagePickerButton(
-                    'Select Doc1 Image', () => _pickImage('doc1')),
-              ],
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Passport Image', _passportImage),
+                  _buildImagePickerButton(
+                      'Select Passport Image', () => _pickImage('passport')),
+                ],
+              ),
             ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Identity Image', _identityImage),
+                  _buildImagePickerButton(
+                      'Select Identity Image', () => _pickImage('identity')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Family Image', _familyImage),
+                  _buildImagePickerButton(
+                      'Select Family Image', () => _pickImage('family')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc1 Image', _doc1Image),
+                  _buildImagePickerButton(
+                      'Select Doc1 Image', () => _pickImage('doc1')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc2 Image', _doc2Image),
+                  _buildImagePickerButton(
+                      'Select Doc2 Image', () => _pickImage('doc2')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc3 Image', _doc2Image),
+                  _buildImagePickerButton(
+                      'Select Doc3 Image', () => _pickImage('doc3')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc4 Image', _doc4Image),
+                  _buildImagePickerButton(
+                      'Select Doc4 Image', () => _pickImage('doc4')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc5 Image', _doc5Image),
+                  _buildImagePickerButton(
+                      'Select Doc5 Image', () => _pickImage('doc5')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc6 Image', _doc6Image),
+                  _buildImagePickerButton(
+                      'Select Doc6 Image', () => _pickImage('doc6')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc7 Image', _doc7Image),
+                  _buildImagePickerButton(
+                      'Select Doc7 Image', () => _pickImage('doc7')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc8 Image', _doc8Image),
+                  _buildImagePickerButton(
+                      'Select Doc8 Image', () => _pickImage('doc8')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc9 Image', _doc9Image),
+                  _buildImagePickerButton(
+                      'Select Doc9 Image', () => _pickImage('doc9')),
+                ],
+              ),
+            ),
+            Container(
+              width: 300, // Fixed width to ensure 2 items in a row
+              child: Column(
+                children: [
+                  _buildImagePreview('Doc10 Image', _doc10Image),
+                  _buildImagePickerButton(
+                      'Select Doc10 Image', () => _pickImage('doc10')),
+                ],
+              ),
+            ),
+
+            // Add other document previews similarly...
           ],
         ),
         isActive: _currentStep == 1,
@@ -263,7 +437,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
             Text('Review all the information before submission.'),
             SizedBox(height: 20),
             _buildActionButton('Submit', _submitForm),
-            //_buildActionButton('Save Draft', _saveDraft),
+            _buildActionButton('Save Draft', _saveDraft),
           ],
         ),
         isActive: _currentStep == 2,
@@ -278,7 +452,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
       Function(String)? onChanged}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
+      child: TextField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,

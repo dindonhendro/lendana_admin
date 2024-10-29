@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lendana_admin/pages/admin_dashboard.dart';
+
 import 'package:lendana_admin/pages/add_member_page.dart';
 import 'package:lendana_admin/pages/loan_status_report_page.dart';
 
@@ -37,14 +37,7 @@ class LandingPage extends StatelessWidget {
                     title: 'Dashboard',
                     color: Colors.teal[300]!,
                     icon: Icons.dashboard,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminDashboard(),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                   _buildGridButton(
                     context,

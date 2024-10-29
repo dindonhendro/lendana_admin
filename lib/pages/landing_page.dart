@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lendana_admin/pages/admin_dashboard_table.dart';
 import 'package:lendana_admin/pages/mob_admin_dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:lendana_admin/pages/admin_dashboard.dart';
 import 'package:lendana_admin/pages/add_member_page.dart';
 import 'package:lendana_admin/pages/loan_status_report_page.dart';
 
