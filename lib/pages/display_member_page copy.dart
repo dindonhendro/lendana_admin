@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DisplayMemberPage extends StatefulWidget {
@@ -16,7 +14,6 @@ class _DisplayMemberPageState extends State<DisplayMemberPage> {
   final _supabaseClient = Supabase.instance.client;
   Map<String, dynamic>? _memberData;
   bool _isLoading = true;
-  String? _filePath; // To store the file path after saving
 
   @override
   void initState() {
@@ -46,49 +43,10 @@ class _DisplayMemberPageState extends State<DisplayMemberPage> {
     }
   }
 
-  Future<void> _saveToFile() async {
-    if (_memberData == null) return;
-
-    try {
-      // Convert the member data to a text format for saving
-      final profileText = '''
-Name          : ${_memberData!['name'] ?? 'N/A'}
-Email         : ${_memberData!['email'] ?? 'N/A'}
-Phone         : ${_memberData!['phone'] ?? 'N/A'}
-NIK           : ${_memberData!['nik'] ?? 'N/A'}
-Date of Birth : ${_memberData!['dob'] ?? 'N/A'}
-Address       : ${_memberData!['address'] ?? 'N/A'}
-Loan Amount   : ${_memberData!['loan_amount'] ?? 'N/A'}
-Profile Image URL    : ${_memberData!['profile_image_url'] ?? 'N/A'}
-Passport Image URL   : ${_memberData!['passport_image_url'] ?? 'N/A'}
-Identity Image URL   : ${_memberData!['identity_image_url'] ?? 'N/A'}
-Family Image URL     : ${_memberData!['family_image_url'] ?? 'N/A'}
-      ''';
-
-      // Get the directory to save the file
-      final directory = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'member_${widget.memberId}_$timestamp.txt';
-      final file = File('${directory.path}/$fileName');
-
-      // Write the profile data to the file
-      await file.writeAsString(profileText);
-
-      setState(() {
-        _filePath = file.path;
-      });
-
-      _showSnackBar('Profile saved to file: $fileName');
-    } catch (e) {
-      _showSnackBar('Error saving to file: $e');
-    }
-  }
-
   // Show a snackbar with a message
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -120,27 +78,6 @@ Family Image URL     : ${_memberData!['family_image_url'] ?? 'N/A'}
                           'Identity Image', _memberData!['identity_image_url']),
                       _buildImageSection(
                           'Family Image', _memberData!['family_image_url']),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _saveToFile,
-                        child: Text('Save to File'),
-                      ),
-                      if (_filePath != null) ...[
-                        SizedBox(height: 20),
-                        Text(
-                          'File saved at: $_filePath',
-                          style: TextStyle(color: Colors.green),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Open the file for printing or viewing in an external application
-                            if (_filePath != null) {
-                              File(_filePath!).open();
-                            }
-                          },
-                          child: Text('Open and Print File'),
-                        ),
-                      ],
                     ],
                   ),
                 ),

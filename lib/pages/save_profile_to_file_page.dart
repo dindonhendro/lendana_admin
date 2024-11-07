@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SaveProfileToFilePage extends StatefulWidget {
   @override
@@ -33,7 +33,7 @@ class _SaveProfileToFilePageState extends State<SaveProfileToFilePage> {
       }
 
       final response = await _supabaseClient
-          .from('users')
+          .from('members')
           .select('name, phone, nik')
           .eq('user_id', user.id)
           .single();
@@ -72,7 +72,6 @@ Alamat    : ………………….., untuk sementara berada di Jakarta, dalam ha
 
       setState(() {
         _publicUrl = publicUrl; // Set the public URL after successful upload
-        print('Public URL: $_publicUrl'); // Debugging print
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,18 +85,6 @@ Alamat    : ………………….., untuk sementara berada di Jakarta, dalam ha
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  // Method to share the public URL
-  Future<void> _shareFile() async {
-    if (_publicUrl != null) {
-      print('Sharing URL: $_publicUrl'); // Debugging print
-      await Share.share(' $_publicUrl');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No file available to share.')),
-      );
     }
   }
 
@@ -118,10 +105,24 @@ Alamat    : ………………….., untuk sementara berada di Jakarta, dalam ha
                     child: Text('Save Profile'),
                   ),
                   SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _shareFile,
-                    child: Text('Share Profile Link'),
-                  ),
+                  if (_publicUrl != null) ...[
+                    Text('File saved successfully!'),
+                    SelectableText(
+                      'Public URL for printing: $_publicUrl',
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Open the URL in a new tab for easy printing
+                        // Note: Ensure the app is running in a browser
+                        if (_publicUrl != null) {
+                          launchUrl(_publicUrl as Uri);
+                        }
+                      },
+                      child: Text('Open and Print File'),
+                    ),
+                  ]
                 ],
               ),
       ),

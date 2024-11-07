@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lendana_admin/page2/save_profile_to_file_page%20copy%202.dart';
 import 'package:lendana_admin/pages/admin_dashboard_table.dart';
 import 'package:lendana_admin/pages/mob_admin_dashboard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -134,8 +135,9 @@ class _LandingPageState extends State<LandingPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MobAdminDashboard(),
-                        ),
+                            builder: (context) => SaveProfileToFilePage()
+                            //MobAdminDashboard(),
+                            ),
                       );
                     },
                   ),
