@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart'; // Use file_picker instead of image_picker
@@ -16,56 +14,6 @@ class AddMemberPage extends StatefulWidget {
 }
 
 class _AddMemberPageState extends State<AddMemberPage> {
-  List<dynamic> _dataProv = [];
-  List<dynamic> _dataDist = [];
-  List<dynamic> _dataSubDist = [];
-  String?
-      _getProvId; // To store the province ID (for logic, like fetching districts)
-  String? _getProvName; // To store the province name (for storing in Supabase)
-  String? _getProv; // Selected Province
-  String? _nameProv;
-  String? _getDistName; // Selected District
-  String? _nameDist;
-  String? _getSubDist; // Selected Sub-District
-  String? _nameSubDist;
-  bool enableDist = false; // Enable/disable district dropdown
-  bool enableSubDist = false; // Enable/disable sub-district dropdown
-
-  // Load JSON data from assets
-  Future<void> loadProvData() async {
-    String jsonString = await DefaultAssetBundle.of(context)
-        .loadString('assets/province_data.json');
-    final jsonData = jsonDecode(jsonString);
-    setState(() {
-      _dataProv = jsonData['provinsi'];
-    });
-    print("Provinces data: $_dataProv");
-  }
-
-  Future<void> loadDistData(String provinceId) async {
-    String jsonString = await DefaultAssetBundle.of(context)
-        .loadString('assets/district_data.json');
-    final jsonData = jsonDecode(jsonString);
-    setState(() {
-      _dataDist = jsonData['districts'][provinceId] ?? [];
-      enableDist = _dataDist
-          .isNotEmpty; // Enable district dropdown if there are districts
-    });
-    print("Districts data for Province $provinceId: $_dataDist");
-  }
-
-  Future<void> loadSubDistData(String districtId) async {
-    String jsonString = await DefaultAssetBundle.of(context)
-        .loadString('assets/subdistrict_data.json');
-    final jsonData = jsonDecode(jsonString);
-    setState(() {
-      _dataSubDist = jsonData['subdistricts'][districtId] ?? [];
-      enableSubDist = _dataSubDist
-          .isNotEmpty; // Enable sub-district dropdown if there are sub-districts
-    });
-    print("Sub-districts data for District $districtId: $_dataSubDist");
-  }
-
   final _supabaseClient = Supabase.instance.client;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -89,13 +37,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
   String? _selectedGender;
   String? _selectedStatus;
   String? _selectedBank;
-  String? _selectedProvince;
-  String? _selectedDistrict;
-  String? _selectedProvinceName;
-  String? _selectedDistrictName;
-  List<Map<String, dynamic>> _provinceData = []; // Populate with province data
-  List<Map<String, dynamic>> _districtData =
-      []; // Populate based on selected province
 
   final List<String> _religionOptions = ['Islam', 'Christianity', 'Other'];
   final List<String> _educationOptions = [
@@ -245,8 +186,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'bank': _selectedBank,
         'gender': _selectedGender,
         'status': _selectedStatus,
-        'province': _selectedProvinceName,
-        'district': _selectedDistrictName,
         'loan_amount': _loanAmountController.text
             .replaceAll('Rp ', '')
             .replaceAll('.', ''),
@@ -304,7 +243,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
   List<Step> _getSteps() {
     return [
       Step(
-        title: Text('Calon Pekerja Migran Info'),
+        title: Text('Member Info'),
         content: Column(
           children: [
             _buildTextField('Name', _nameController),
@@ -320,11 +259,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                 ),
               ),
             ),
-            Column(
-              children: [
-                _addressGroup(),
-              ],
-            ),
+            _buildTextField('Address', _addressController),
             _buildDropdownField1('Religion', _selectedReligion, (newValue) {
               setState(() {
                 _selectedReligion = newValue;
@@ -425,55 +360,25 @@ class _AddMemberPageState extends State<AddMemberPage> {
   }
 
   // Build text field with custom styling
-  Widget _addressGroup() {
-    return Container(
-      margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey, width: 1.0), // Outline border
-        borderRadius: BorderRadius.circular(8), // Rounded corners
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Address',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8), // Space between title and dropdowns
-          _provinsi(),
-          SizedBox(height: 8), // Space between dropdowns
-          _district(),
-          SizedBox(height: 8), // Space between dropdown and text field
-          _buildTextField('Address', _addressController),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTextField(String label, TextEditingController controller,
       {TextInputType inputType = TextInputType.text,
       List<TextInputFormatter>? inputFormatter,
       Function(String)? onChanged}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
-        color: Color.fromRGBO(223, 240, 165, 0.612),
-        child: TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            fillColor: Colors.grey[200],
-            labelText: label,
-            // border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: BorderSide(color: Colors.blueAccent)),
-            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-          ),
-          keyboardType: inputType,
-          inputFormatters: inputFormatter,
-          onChanged: onChanged,
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blueAccent)),
+          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         ),
+        keyboardType: inputType,
+        inputFormatters: inputFormatter,
+        onChanged: onChanged,
       ),
     );
   }
@@ -486,10 +391,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
       child: DropdownButtonFormField<String>(
         value: selectedValue,
         decoration: InputDecoration(
-          filled: true,
-          fillColor: Color.fromRGBO(214, 237, 169, 0.612),
           labelText: label,
-          //    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.blueAccent)),
@@ -627,122 +530,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
     );
   }
 
-  Widget _provinsi() {
-    return Padding(
-      padding: EdgeInsets.only(left: 10, right: 10),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: DropdownButtonHideUnderline(
-          child: Container(
-            padding: EdgeInsets.only(left: 10, right: 10),
-            decoration: BoxDecoration(
-              color: Color.fromRGBO(214, 237, 169, 0.612),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonFormField(
-              decoration: InputDecoration(
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              hint: Text("Choose Province"),
-              value: _selectedProvinceName,
-              items: _dataProv.map((item) {
-                return DropdownMenuItem(
-                  child: Text(item['nama']),
-                  value: item[
-                      'nama'], // Set the value to the name instead of the ID
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedProvinceName = value as String?;
-                  _selectedDistrict = null;
-                  _districtData = [];
-                  if (_selectedProvinceName != null) {
-                    // Load districts based on province name
-                    final provinceId = _dataProv
-                        .firstWhere((item) =>
-                            item['nama'] == _selectedProvinceName)['id']
-                        .toString();
-                    loadDistrictData(provinceId);
-                  }
-                });
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-// Load district data based on selected province
-  Future<void> loadDistrictData(String provinceId) async {
-    String jsonString = await DefaultAssetBundle.of(context)
-        .loadString('assets/district_data.json');
-    final jsonData = jsonDecode(jsonString);
-
-    // Ensure that we get the list of districts for the specific province ID
-    final districts = jsonData['districts'][provinceId];
-
-    if (districts != null && districts is List) {
-      setState(() {
-        // Cast each item in the list to Map<String, dynamic>
-        _districtData = List<Map<String, dynamic>>.from(districts);
-      });
-    } else {
-      // If no districts found or format is incorrect, reset _districtData
-      setState(() {
-        _districtData = [];
-      });
-    }
-  }
-
-  Widget _district() {
-    return Padding(
-      padding: EdgeInsets.only(left: 10, right: 10),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: DropdownButtonHideUnderline(
-          child: Container(
-            padding: EdgeInsets.only(left: 10, right: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: DropdownButtonFormField(
-              decoration: InputDecoration(
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-              ),
-              hint: Text("Choose District"),
-              value: _selectedDistrictName,
-              items: _districtData.map((item) {
-                return DropdownMenuItem(
-                  child: Text(item['nama']),
-                  value: item['nama'], // Store the district name here
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDistrictName = value as String?;
-                });
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   // Build the main UI of the page
   @override
-  void initState() {
-    super.initState();
-    loadProvData(); // Load province data on init
-  }
-
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Add Member')),

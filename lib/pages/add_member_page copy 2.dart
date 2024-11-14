@@ -24,7 +24,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
   String? _getProvName; // To store the province name (for storing in Supabase)
   String? _getProv; // Selected Province
   String? _nameProv;
-  String? _getDistName; // Selected District
+  String? _getDist; // Selected District
   String? _nameDist;
   String? _getSubDist; // Selected Sub-District
   String? _nameSubDist;
@@ -89,13 +89,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
   String? _selectedGender;
   String? _selectedStatus;
   String? _selectedBank;
-  String? _selectedProvince;
-  String? _selectedDistrict;
-  String? _selectedProvinceName;
-  String? _selectedDistrictName;
-  List<Map<String, dynamic>> _provinceData = []; // Populate with province data
-  List<Map<String, dynamic>> _districtData =
-      []; // Populate based on selected province
 
   final List<String> _religionOptions = ['Islam', 'Christianity', 'Other'];
   final List<String> _educationOptions = [
@@ -245,8 +238,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
         'bank': _selectedBank,
         'gender': _selectedGender,
         'status': _selectedStatus,
-        'province': _selectedProvinceName,
-        'district': _selectedDistrictName,
+        'province': _getProvName,
+        'district': _getDist,
         'loan_amount': _loanAmountController.text
             .replaceAll('Rp ', '')
             .replaceAll('.', ''),
@@ -304,9 +297,11 @@ class _AddMemberPageState extends State<AddMemberPage> {
   List<Step> _getSteps() {
     return [
       Step(
-        title: Text('Calon Pekerja Migran Info'),
+        title: Text('Member Info'),
         content: Column(
           children: [
+            _provinsi(),
+            _district(),
             _buildTextField('Name', _nameController),
             _buildTextField('Phone', _phoneController),
             _buildTextField('NIK', _nikController),
@@ -320,11 +315,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
                 ),
               ),
             ),
-            Column(
-              children: [
-                _addressGroup(),
-              ],
-            ),
+            _buildTextField('Address', _addressController),
             _buildDropdownField1('Religion', _selectedReligion, (newValue) {
               setState(() {
                 _selectedReligion = newValue;
@@ -425,55 +416,25 @@ class _AddMemberPageState extends State<AddMemberPage> {
   }
 
   // Build text field with custom styling
-  Widget _addressGroup() {
-    return Container(
-      margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey, width: 1.0), // Outline border
-        borderRadius: BorderRadius.circular(8), // Rounded corners
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Address',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8), // Space between title and dropdowns
-          _provinsi(),
-          SizedBox(height: 8), // Space between dropdowns
-          _district(),
-          SizedBox(height: 8), // Space between dropdown and text field
-          _buildTextField('Address', _addressController),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTextField(String label, TextEditingController controller,
       {TextInputType inputType = TextInputType.text,
       List<TextInputFormatter>? inputFormatter,
       Function(String)? onChanged}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
-        color: Color.fromRGBO(223, 240, 165, 0.612),
-        child: TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            fillColor: Colors.grey[200],
-            labelText: label,
-            // border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: BorderSide(color: Colors.blueAccent)),
-            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-          ),
-          keyboardType: inputType,
-          inputFormatters: inputFormatter,
-          onChanged: onChanged,
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blueAccent)),
+          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         ),
+        keyboardType: inputType,
+        inputFormatters: inputFormatter,
+        onChanged: onChanged,
       ),
     );
   }
@@ -486,10 +447,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
       child: DropdownButtonFormField<String>(
         value: selectedValue,
         decoration: InputDecoration(
-          filled: true,
-          fillColor: Color.fromRGBO(214, 237, 169, 0.612),
           labelText: label,
-          //    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.blueAccent)),
@@ -636,8 +595,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
           child: Container(
             padding: EdgeInsets.only(left: 10, right: 10),
             decoration: BoxDecoration(
-              color: Color.fromRGBO(214, 237, 169, 0.612),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(5),
             ),
             child: DropdownButtonFormField(
               decoration: InputDecoration(
@@ -646,26 +605,30 @@ class _AddMemberPageState extends State<AddMemberPage> {
                 ),
               ),
               hint: Text("Choose Province"),
-              value: _selectedProvinceName,
+              value: _getProv,
               items: _dataProv.map((item) {
                 return DropdownMenuItem(
                   child: Text(item['nama']),
-                  value: item[
-                      'nama'], // Set the value to the name instead of the ID
+                  value: item['id'].toString(),
                 );
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  _selectedProvinceName = value as String?;
-                  _selectedDistrict = null;
-                  _districtData = [];
-                  if (_selectedProvinceName != null) {
-                    // Load districts based on province name
-                    final provinceId = _dataProv
-                        .firstWhere((item) =>
-                            item['nama'] == _selectedProvinceName)['id']
-                        .toString();
-                    loadDistrictData(provinceId);
+                  _nameDist = null;
+                  _nameSubDist = null;
+                  _getDist = null;
+                  _getSubDist = null;
+                  _getProvId =
+                      value as String?; // Store the selected province ID
+                  _getProvName = _dataProv.firstWhere((item) =>
+                      item['id'].toString() ==
+                      _getProvId)['nama']; // Get the name based on ID
+
+                  enableDist = false; // Disable district dropdown initially
+                  enableSubDist = false; // Disable sub-district dropdown
+                  if (_getProv != null) {
+                    loadDistData(
+                        _getProv!); // Load districts for selected province
                   }
                 });
               },
@@ -674,28 +637,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
         ),
       ),
     );
-  }
-
-// Load district data based on selected province
-  Future<void> loadDistrictData(String provinceId) async {
-    String jsonString = await DefaultAssetBundle.of(context)
-        .loadString('assets/district_data.json');
-    final jsonData = jsonDecode(jsonString);
-
-    // Ensure that we get the list of districts for the specific province ID
-    final districts = jsonData['districts'][provinceId];
-
-    if (districts != null && districts is List) {
-      setState(() {
-        // Cast each item in the list to Map<String, dynamic>
-        _districtData = List<Map<String, dynamic>>.from(districts);
-      });
-    } else {
-      // If no districts found or format is incorrect, reset _districtData
-      setState(() {
-        _districtData = [];
-      });
-    }
   }
 
   Widget _district() {
@@ -707,7 +648,9 @@ class _AddMemberPageState extends State<AddMemberPage> {
           child: Container(
             padding: EdgeInsets.only(left: 10, right: 10),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: enableDist
+                  ? Colors.grey[200]
+                  : Colors.grey[300], // Change color when disabled
               borderRadius: BorderRadius.circular(5),
             ),
             child: DropdownButtonFormField(
@@ -717,18 +660,27 @@ class _AddMemberPageState extends State<AddMemberPage> {
                 ),
               ),
               hint: Text("Choose District"),
-              value: _selectedDistrictName,
-              items: _districtData.map((item) {
+              value: _getDist,
+              items: _dataDist.map((item) {
                 return DropdownMenuItem(
                   child: Text(item['nama']),
-                  value: item['nama'], // Store the district name here
+                  value: item['id'].toString(),
                 );
               }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDistrictName = value as String?;
-                });
-              },
+              onChanged: enableDist
+                  ? (value) {
+                      setState(() {
+                        _nameSubDist = null;
+                        _getSubDist = null;
+                        _getDist = value as String?;
+                        enableSubDist = false; // Disable sub-district initially
+                        if (_getDist != null) {
+                          loadSubDistData(
+                              _getDist!); // Load sub-districts for selected district
+                        }
+                      });
+                    }
+                  : null, // Disable onChanged when district dropdown is disabled
             ),
           ),
         ),

@@ -64,6 +64,8 @@ flutter:
     - assets/flags/
     - assets/
     - assets/lendana.png
+    - assets/province_data.json
+    - assets/district_data.json
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

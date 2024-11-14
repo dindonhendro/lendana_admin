@@ -58,6 +58,10 @@ Phone         : ${_memberData!['phone'] ?? 'N/A'}
 NIK           : ${_memberData!['nik'] ?? 'N/A'}
 Date of Birth : ${_memberData!['dob'] ?? 'N/A'}
 Address       : ${_memberData!['address'] ?? 'N/A'}
+Religion        : ${_memberData!['religion'] ?? 'N/A'}
+Education Level  : ${_memberData!['education'] ?? 'N/A'}
+Gender  : ${_memberData!['gender'] ?? 'N/A'}
+Marrital Status  : ${_memberData!['status'] ?? 'N/A'}
 Loan Amount   : ${_memberData!['loan_amount'] ?? 'N/A'}
 Profile Image URL    : ${_memberData!['profile_image_url'] ?? 'N/A'}
 Passport Image URL   : ${_memberData!['passport_image_url'] ?? 'N/A'}
@@ -110,6 +114,11 @@ Family Image URL     : ${_memberData!['family_image_url'] ?? 'N/A'}
                       _buildInfoRow(
                           'Date of Birth', _memberData!['dob'] ?? 'N/A'),
                       _buildInfoRow('Address', _memberData!['address']),
+                      _buildInfoRow('Religion', _memberData!['religion']),
+                      _buildInfoRow(
+                          'Education Level', _memberData!['education']),
+                      _buildInfoRow('Gender', _memberData!['gender']),
+                      _buildInfoRow('Marrital Status', _memberData!['status']),
                       _buildInfoRow('Loan Amount', _memberData!['loan_amount']),
                       SizedBox(height: 20),
                       _buildImageSection(
